@@ -453,9 +453,10 @@ let
 
             EnvironmentFile = lib.mkIf (data.environmentFile != null) data.environmentFile;
 
-            Environment = lib.mapAttrsToList (k: v: ''"${k}=%d/${k}"'') data.credentialFiles;
+            Environment = lib.mapAttrsToList (k: v: ''"${k}=%d/${k}"'') (data.credentialFiles ++ data.encryptedCredentialFiles);
 
             LoadCredential = lib.mapAttrsToList (k: v: "${k}:${v}") data.credentialFiles;
+            LoadCredentialEncrypted = lib.mapAttrsToList (k: v: "${k}:${v}") data.encryptedCredentialFiles;
 
             # Run as root (Prefixed with +)
             ExecStartPost =
@@ -753,12 +754,32 @@ let
             for your selected dnsProvider.
             To find out what values you need to set, consult the documentation at
             <https://go-acme.github.io/lego/dns/> for the corresponding dnsProvider.
-            This allows to securely pass credential files to lego by leveraging systemd
-            credentials.
+            This allows one to securely pass credential files to lego by
+            leveraging systemd credentials.
           '';
           example = lib.literalExpression ''
             {
               "RFC2136_TSIG_SECRET_FILE" = "/run/secrets/tsig-secret-example.org";
+            }
+          '';
+        };
+
+        encryptedCredentialFiles = lib.mkOption {
+          type = lib.types.attrsOf (lib.types.path);
+          inherit (defaultAndText "encryptedCredentialFiles" { }) default defaultText;
+          description = ''
+            Environment variables suffixed by "_FILE" to set for the cert's service
+            for your selected dnsProvider.
+            To find out what values you need to set, consult the documentation at
+            <https://go-acme.github.io/lego/dns/> for the corresponding dnsProvider.
+            The referenced files are decrypted by systemd, and those files
+            should be created using the systemd-creds tool <https://systemd.io/CREDENTIALS>.
+            This allows one to securely pass encrypted credential files to lego
+            by through systemd encrypted credentials.
+          '';
+          example = lib.literalExpression ''
+            {
+              "RFC2136_TSIG_SECRET_FILE" = "/etc/credstore.encrypted/tsig-secret-example.org";
             }
           '';
         };
@@ -1110,6 +1131,13 @@ in
               assertion = lib.all (lib.hasSuffix "_FILE") (lib.attrNames data.credentialFiles);
               message = ''
                 Option `security.acme.certs.${cert}.credentialFiles` can only be
+                used for variables suffixed by "_FILE".
+              '';
+            }
+            {
+              assertion = lib.all (lib.hasSuffix "_FILE") (lib.attrNames data.encryptedCredentialFiles);
+              message = ''
+                Option `security.acme.certs.${cert}.encryptedCredentialFiles` can only be
                 used for variables suffixed by "_FILE".
               '';
             }
