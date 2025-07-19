@@ -21,10 +21,19 @@ rec {
     sha256 = "sha256-rqL8lnzVVR+5Hc7sWXK8dCXN92dU76qSoii3/4StODM=";
   };
 
+  mlton20241230Binary = callPackage ./20241230-binary.nix { };
+
+  mlton20241230 = callPackage ./from-git-source.nix {
+    mltonBootstrap = mlton20241230Binary;
+    version = "20241230";
+    rev = "on-20241230-release";
+    sha256 = "sha256-gJUzav2xH8C4Vy5FuqN73Z6lPMSPQgJApF8LgsJXRWo=";
+  };
+
   mltonHEAD = callPackage ./from-git-source.nix {
-    mltonBootstrap = mlton20210117Binary;
+    mltonBootstrap = mlton20241230Binary;
     version = "HEAD";
-    rev = "875f7912a0b135a9a7e86a04ecac9cacf0bfe5e5";
-    sha256 = "sha256-/MIoVqqv8qrJPehU7VRFpXtAAo8UUzE3waEvB7WnS9A=";
+    rev = "8c9c85015d2f099b7434b26079a78d5ec2a5299b";
+    sha256 = "sha256-JjaheJbKqpastaqDeCKHZzG/nodV42VBaVpn65Uzfx8=";
   };
 }
