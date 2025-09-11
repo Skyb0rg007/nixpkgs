@@ -5,6 +5,7 @@ let
     assertValueOneOf
     automountConfig
     checkUnitConfig
+    credentialNameType
     makeJobScript
     mountConfig
     serviceConfig
@@ -361,6 +362,34 @@ rec {
             LANG = "nl_NL.UTF-8";
           };
           description = "Environment variables passed to the service's processes.";
+        };
+
+        credentials = mkOption {
+          default = { };
+          type =
+            with types;
+            attrsOf (
+              nullOr (oneOf [
+                (pathWith {
+                  absolute = true;
+                  inStore = false;
+                })
+                credentialNameType
+              ])
+            );
+          example = {
+            "foo.password" = "/etc/secrets/foo-password";
+            "bar.password" = "mycredential.password";
+          };
+          description = ''
+            Each attribute in this set specifies a credential to
+            securely pass to the service.  The credential will be
+            available under {env}`CREDENTIALS_DIRECTORY`/`name`.
+            An absolute path will become a `LoadCredential=` option,
+            otherwise the value will be treated as a credential
+            name and converted to an `ImportCredential=` option.
+            See {manpage}`systemd.exec(5)` for details.
+          '';
         };
 
         path = mkOption {
