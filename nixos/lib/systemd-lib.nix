@@ -48,6 +48,7 @@ let
     splitString
     stringLength
     stringToCharacters
+    substring
     tail
     toIntBase10
     trace
@@ -68,6 +69,11 @@ rec {
 
   # a type for options that take a unit name
   unitNameType = types.strMatching "[a-zA-Z0-9@%:_.\\-]+[.](service|socket|device|mount|automount|swap|target|path|timer|scope|slice)";
+
+  # a type for credential names
+  credentialNameType = types.addCheck (types.strMatching "^[ -)+-.0-9;->@-Z\\^-~]{1,255}$") (
+    s: s != "." && s != ".."
+  );
 
   makeUnit =
     name: unit:
@@ -780,6 +786,24 @@ rec {
           else
             s
         ) (attrNames env)
+      )
+      + (
+        let
+          creds = def.credentials;
+        in
+        concatMapStrings (
+          n:
+          optionalString (creds.${n} != null) (
+            if !credentialNameType.check n then
+              throw "The string ‘${n}’ is not a valid systemd credential name."
+            else if substring 0 1 creds.${n} == "/" then
+              "LoadCredential=${toJSON "${n}:${creds.${n}}"}\n"
+            else if n == creds.${n} then
+              "ImportCredential=${toJSON "${n}"}\n"
+            else
+              "ImportCredential=${toJSON "${creds.${n}}:${n}"}\n"
+          )
+        ) (attrNames creds)
       )
       + (
         if def ? reloadIfChanged && def.reloadIfChanged then
