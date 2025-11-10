@@ -322,6 +322,24 @@ let
           '';
         };
 
+        fprintAuthCondition = lib.mkOption {
+          default = null;
+          type = lib.types.nullOr (lib.types.listOf lib.types.str);
+          description = ''
+            If set, the given command line will be exececuted before
+            fingerprint authentication is attempted.
+            A non-zero exit code will skip fingerprint authentication.
+
+            This is useful to skip fingerprint authentication when the
+            fingerprint sensor is not reachable,
+            for example when a laptop lid is closed.
+          '';
+          example = [
+            (lib.literalExpression "(lib.getExe pkgs.gnugrep)")
+            "-qs" "open" "/proc/acpi/button/lid/LID0/state"
+          ];
+        };
+
         oathAuth = lib.mkOption {
           default = config.security.pam.oath.enable;
           defaultText = lib.literalExpression "config.security.pam.oath.enable";
@@ -938,6 +956,13 @@ let
                     ];
                   }
                 )
+                {
+                  name = "fprintd-condition";
+                  enable = cfg.fprintAuth && cfg.fprintAuthCondition != null;
+                  control = "[success=ignore default=2]";
+                  modulePath = "${package}/lib/security/pam_exec.so";
+                  args = ["quiet" cfg.fprintAuthCondition];
+                }
                 {
                   name = "fprintd-require_tty";
                   enable = cfg.fprintAuth;
