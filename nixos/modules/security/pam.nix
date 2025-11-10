@@ -939,6 +939,16 @@ let
                   }
                 )
                 {
+                  name = "fprintd-require_tty";
+                  enable = cfg.fprintAuth;
+                  control = "[success=1 default=ignore]";
+                  modulePath = "${package}/lib/security/pam_succeed_if.so";
+                  args = [
+                    "service in sudo:su:su-l"
+                    "tty in :unknown"
+                  ];
+                }
+                {
                   name = "fprintd";
                   enable = cfg.fprintAuth;
                   control = "sufficient";
