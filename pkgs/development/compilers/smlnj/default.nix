@@ -2,82 +2,83 @@
   lib,
   stdenv,
   fetchurl,
+  fetchFromGitHub,
+  autoconf,
+  automake,
+  asciidoctor,
+  installShellFiles,
 }:
 let
-  version = "110.99.9";
-  baseurl = "https://smlnj.cs.uchicago.edu/dist/working/${version}";
-
-  arch = if stdenv.hostPlatform.is64bit then "64" else "32";
-
   hashes = builtins.fromJSON (builtins.readFile ./hashes.json);
+  arch = if stdenv.hostPlatform.is64bit then "64" else "32";
+  sys =
+    if stdenv.hostPlatform.isx86_64 then
+      "amd64-unix"
+    else if stdenv.hostPlatform.isx86_32 then
+      "x86-unix"
+    else
+      throw "Unsupported host platform ${stdenv.hostPlatform.system}";
+in
+stdenv.mkDerivation (finalAttrs: {
+  pname = "smlnj";
+  version = "110.99.9";
+  __structuredAttrs = true;
+  strictDeps = true;
 
-  fetchSource =
-    name:
-    fetchurl {
-      url = "${baseurl}/${name}";
-      hash = hashes.${name};
-    };
+  src = fetchFromGitHub {
+    owner = "smlnj";
+    repo = "legacy";
+    tag = "v${finalAttrs.version}";
+    hash = hashes.git;
+  };
 
-  bootSource = if stdenv.hostPlatform.is64bit then "boot.amd64-unix.tgz" else "boot.x86-unix.tgz";
+  bootFile = fetchurl {
+    url = "https://smlnj.cs.uchicago.edu/dist/working/${finalAttrs.version}/boot.${sys}.tgz";
+    hash = hashes."boot.${sys}.tgz";
+  };
 
-  sources = map fetchSource [
-    bootSource
-    "config.tgz"
-    "cm.tgz"
-    "compiler.tgz"
-    "runtime.tgz"
-    "system.tgz"
-    "MLRISC.tgz"
-    "smlnj-lib.tgz"
-    "old-basis.tgz"
-    "ckit.tgz"
-    "nlffi.tgz"
-    "cml.tgz"
-    "eXene.tgz"
-    "ml-lpt.tgz"
-    "ml-lex.tgz"
-    "ml-yacc.tgz"
-    "ml-burg.tgz"
-    "pgraph.tgz"
-    "trace-debug-profile.tgz"
-    "heap2asm.tgz"
-    "smlnj-c.tgz"
-    "doc.tgz"
-    "asdl.tgz"
+  nativeBuildInputs = [
+    autoconf
+    automake
+    asciidoctor
+    installShellFiles
   ];
 
-in
-stdenv.mkDerivation {
-  pname = "smlnj";
-  inherit version sources;
-
-  unpackPhase = ''
-    for s in $sources; do
-      b=$(basename $s)
-      cp $s ''${b#*-}
-    done
-    unpackFile config.tgz
-    mkdir base
-    ./config/unpack $TMP runtime
-  '';
-
   patchPhase = ''
-    sed -i '/^PATH=/d' config/_arch-n-opsys base/runtime/config/gen-posix-names.sh
-    echo SRCARCHIVEURL="file:/$TMP" > config/srcarchiveurl
+    runHook prePatch
+
+    ln -s $bootFile boot.${sys}.tgz
+
+    substituteInPlace doc/configure.ac \
+      --replace-warn 'AC_MSG_ERROR([documentation ' 'AC_MSG_WARN([documentation '
+
+    runHook postPatch
   '';
 
   buildPhase = ''
-    ./config/install.sh -default ${arch}
+    runHook preBuild
+
+    substituteInPlace config/_arch-n-opsys \
+      --replace-warn '6.*) ;; # 2022 --' '*.*) ;; # 2022 --'
+
+    mkdir -pv $out
+    INSTALLDIR=$out ./config/install.sh -default ${arch}
+
+    pushd doc
+    autoconf -Iconfig
+    ./configure
+    make -C src/man man
+    popd
+
+    runHook postBuild
   '';
 
   installPhase = ''
-    mkdir -pv $out
-    cp -rv bin lib $out
+    runHook preInstall
 
-    cd $out/bin
-    for i in *; do
-      sed -i "2iSMLNJ_HOME=$out/" $i
-    done
+    installManPage src/man/*.{1,7}
+
+    runHook postInstall
   '';
 
   passthru.updateScript = ./update.sh;
@@ -90,12 +91,15 @@ stdenv.mkDerivation {
       "x86_64-linux"
       "i686-linux"
       "x86_64-darwin"
-      "aarch64-darwin"
     ];
     maintainers = with lib.maintainers; [
       skyesoss
       thoughtpolice
     ];
     mainProgram = "sml";
+    sourceProvenance = with lib.sourceTypes; [
+      fromSource
+      binaryNativeCode
+    ];
   };
-}
+})

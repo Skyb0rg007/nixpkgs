@@ -1,5 +1,5 @@
 #!/usr/bin/env nix-shell
-#!nix-shell -I nixpkgs=./. -i bash -p bash curl nix-prefetch jq
+#!nix-shell -I nixpkgs=./. -i bash -p bash curl nix-prefetch jq nix-prefetch-github
 # shellcheck shell=bash
 
 set -euo pipefail
@@ -28,10 +28,6 @@ fi
 
 files=(
     boot.amd64-unix.tgz boot.x86-unix.tgz
-    config.tgz cm.tgz compiler.tgz runtime.tgz system.tgz MLRISC.tgz
-    smlnj-lib.tgz old-basis.tgz ckit.tgz nlffi.tgz cml.tgz eXene.tgz ml-lpt.tgz
-    ml-lex.tgz ml-yacc.tgz ml-burg.tgz pgraph.tgz trace-debug-profile.tgz
-    heap2asm.tgz smlnj-c.tgz doc.tgz asdl.tgz
 )
 
 tmpdir="$(mktemp --directory)"
@@ -48,12 +44,16 @@ for pid in "${pids[@]}"; do
     wait "$pid"
 done
 
-printf '{\n' > "$hashfile"
-for file in "${files[@]}"; do
-    printf '  "%s": "%s",\n' "$file" "$(cat "$tmpdir/$file")" >> "$hashfile"
-done
-printf '  "version": "%s"\n' "$version" >> "$hashfile"
-printf '}\n' >> "$hashfile"
+srcHash="$(nix-prefetch-github smlnj legacy --tag "$version" | jq --raw-output .hash)"
+
+{
+  printf '{\n'
+  for file in "${files[@]}"; do
+    printf '  "%s": "%s",\n' "$file" "$(cat "$tmpdir/$file")"
+  done
+  printf '  "git": "%s"\n' "$srcHash"
+  printf '}\n'
+} > "$hashfile"
 
 sed --in-place 's:version = "[0-9.]\+";:version = "'"$version"'";:' "$nixfile"
 
