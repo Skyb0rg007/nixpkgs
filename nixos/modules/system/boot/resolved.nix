@@ -49,6 +49,42 @@ let
     ) (lib.filterAttrs (key: value: value != null) settings);
 
   resolvedConf = settingsToSections { Resolve = transformSettings cfg.settings.Resolve; };
+
+  # src/resolve/resolved-dns-trust-anchor.c
+  defaultNegative = [
+    "test"
+    "10.in-addr.arpa"
+    "16.172.in-addr.arpa"
+    "17.172.in-addr.arpa"
+    "18.172.in-addr.arpa"
+    "19.172.in-addr.arpa"
+    "20.172.in-addr.arpa"
+    "21.172.in-addr.arpa"
+    "22.172.in-addr.arpa"
+    "23.172.in-addr.arpa"
+    "24.172.in-addr.arpa"
+    "25.172.in-addr.arpa"
+    "26.172.in-addr.arpa"
+    "27.172.in-addr.arpa"
+    "28.172.in-addr.arpa"
+    "29.172.in-addr.arpa"
+    "30.172.in-addr.arpa"
+    "31.172.in-addr.arpa"
+    "168.192.in-addr.arpa"
+    "d.f.ip6.arpa"
+    "local"
+    "home"
+    "corp"
+    "lan"
+    "intranet"
+    "internal"
+    "private"
+    "home.arpa"
+    "resolver.arpa"
+    "ipv4only.arpa"
+    "170.0.0.192.in-addr.arpa"
+    "171.0.0.192.in-addr.arpa"
+  ];
 in
 {
   imports = [
@@ -205,6 +241,8 @@ in
 
       environment.etc = {
         "systemd/resolved.conf".text = resolvedConf;
+
+        "dnssec-trust-anchors.d/default.negative".text = lib.mkDefault (lib.concatStringsSep "\n" defaultNegative + "\n");
 
         # symlink the dynamic stub resolver of resolv.conf as recommended by upstream:
         # https://www.freedesktop.org/software/systemd/man/systemd-resolved.html#/etc/resolv.conf
