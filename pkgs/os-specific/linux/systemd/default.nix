@@ -250,6 +250,11 @@ stdenv.mkDerivation (finalAttrs: {
   + lib.optionalString withLibBPF ''
     substituteInPlace src/bpf/meson.build \
       --replace-fail "find_program('clang'" "find_program('${stdenv.cc.targetPrefix}clang'"
+
+    # systemd would otherwise generate this from the build machine's
+    # /sys/kernel/btf/vmlinux, which is unavailable in the sandbox and would
+    # tie the build to the builder's kernel. See the header for details.
+    install -m444 ${./vmlinux.h} src/bpf/vmlinux.h
   ''
   + lib.optionalString withUkify ''
     substituteInPlace src/ukify/ukify.py \
@@ -518,6 +523,9 @@ stdenv.mkDerivation (finalAttrs: {
     (lib.mesonEnable "tpm2" withTpm2Tss)
     (lib.mesonEnable "pcre2" withPCRE2)
     (lib.mesonEnable "bpf-framework" withLibBPF)
+    # 'provided' rather than 'auto' so that a builder that happens to expose
+    # /sys/kernel/btf/vmlinux can never silently generate one instead.
+    (lib.mesonOption "vmlinux-h" (if withLibBPF then "provided" else "disabled"))
     (lib.mesonEnable "bootloader" withBootloader)
     (lib.mesonEnable "ukify" withUkify)
     (lib.mesonEnable "kmod" withKmod)
@@ -581,6 +589,13 @@ stdenv.mkDerivation (finalAttrs: {
   preConfigure = ''
     substituteInPlace src/libsystemd/sd-journal/catalog.c \
       --replace-fail /usr/lib/systemd/catalog/ $out/lib/systemd/catalog/
+  ''
+  # meson passes the dirname of this verbatim to the BPF compiler as an -I
+  # flag, so a relative path would be resolved against the build directory
+  # rather than the source. That leaves an absolute path, which is only known
+  # once the sources have been unpacked.
+  + lib.optionalString withLibBPF ''
+    appendToVar mesonFlags "-Dvmlinux-h-path=$PWD/src/bpf/vmlinux.h"
   '';
 
   # These defines are overridden by CFLAGS and would trigger annoying
