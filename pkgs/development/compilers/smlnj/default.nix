@@ -2,12 +2,14 @@
   lib,
   stdenv,
   callPackage,
+  fetchpatch,
   fetchFromGitHub,
   fetchurl,
   automake,
   autoconf,
   cmake,
   versionCheckHook,
+  libfaketime-bpf,
 }:
 let
   version = "2026.2";
@@ -44,7 +46,8 @@ stdenv.mkDerivation {
     autoconf
     automake
     cmake
-  ];
+  ]
+  ++ lib.optional stdenv.buildPlatform.isLinux libfaketime-bpf;
 
   __structuredAttrs = true;
   strictDeps = true;
@@ -61,6 +64,7 @@ stdenv.mkDerivation {
     ln -s ${llvm}/lib/libCFGCodeGen.a lib/libCFGCodeGen.a
     ln -s ${llvm}/lib/libCFGCodeGen.a $out/lib/libCFGCodeGen.a
 
+    ${lib.optionalString stdenv.buildPlatform.isLinux "faketime-bpf -c $SOURCE_DATE_EPOCH \\"}
     ./build.sh -install $out
 
     rm $out/bin/llvm-config $out/lib/libCFGCodeGen.a

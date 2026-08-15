@@ -18,8 +18,15 @@ stdenv.mkDerivation {
   pname = "smlnj-llvm";
   inherit version;
   src = "${src}/runtime/llvm21";
+
+  patches = [
+    ./zero-init-code-buffer.patch
+  ];
+
   strictDeps = true;
   __structuredAttrs = true;
+
+  enableParallelBuilding = true;
 
   nativeBuildInputs = [
     cmake
