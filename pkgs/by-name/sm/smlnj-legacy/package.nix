@@ -2,6 +2,7 @@
   lib,
   stdenv,
   fetchurl,
+  libfaketime-bpf,
 }:
 let
   version = "110.99.9";
@@ -53,6 +54,8 @@ stdenv.mkDerivation {
   __structuredAttrs = true;
   strictDeps = true;
 
+  nativeBuildInputs = lib.optional stdenv.buildPlatform.isLinux libfaketime-bpf;
+
   unpackPhase = ''
     for s in "''${sources[@]}"; do
       b=$(basename $s)
@@ -69,7 +72,12 @@ stdenv.mkDerivation {
   '';
 
   buildPhase = ''
+    runHook preBuild
+
+    ${lib.optionalString stdenv.buildPlatform.isLinux "faketime-bpf -c $SOURCE_DATE_EPOCH \\"}
     ./config/install.sh -default ${arch}
+
+    runHook postBuild
   '';
 
   installPhase = ''
