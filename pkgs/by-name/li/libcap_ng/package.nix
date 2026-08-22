@@ -10,24 +10,29 @@
   linuxHeaders,
   python3Packages,
   withPython ? false,
+  withCapAudit ? false,
+  bpftools,
+  audit,
+  libbpf,
+  clang,
 }:
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "libcap-ng";
-  version = "0.9.3";
+  version = "0.9.5";
 
   src = fetchFromGitHub {
     owner = "stevegrubb";
     repo = "libcap-ng";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-anuPOBWp4Hlpo+m6kYlSd2v7H3P7LQ9brZdq1lo7Po4=";
+    hash = "sha256-HYVbPoFSlkmNuL5EsEQVAekE4fwidgL+biTBBS1BdPM=";
   };
 
   # NEWS needs to exist or else the build fails
   postPatch = ''
     touch NEWS
     substituteInPlace utils/captest.c \
-      --replace-fail /usr/bin/captest ${placeholder "out"}/bin/captest
+      --replace-fail /usr/bin/captest $out/bin/captest
   '';
 
   strictDeps = true;
@@ -41,11 +46,20 @@ stdenv.mkDerivation (finalAttrs: {
   ]
   ++ lib.optionals withPython [
     python3Packages.python # m4
+  ]
+  ++ lib.optionals withCapAudit [
+    bpftools
+    clang
   ];
 
-  buildInputs = lib.optionals withPython [
-    python3Packages.python
-  ];
+  buildInputs =
+    lib.optionals withPython [
+      python3Packages.python
+    ]
+    ++ lib.optionals withCapAudit [
+      audit
+      libbpf
+    ];
 
   nativeCheckInputs = lib.optionals withPython [
     python3Packages.pythonImportsCheckHook
@@ -59,7 +73,11 @@ stdenv.mkDerivation (finalAttrs: {
 
   configureFlags = [
     (lib.withFeature withPython "python")
-    "--with-capability_header='${linuxHeaders}/include/linux/capability.h'" # required to link bindings
+    (lib.withFeatureAs withPython "capability_header" "${linuxHeaders}/include/linux/capability.h")
+    # "--with-capability_header='${linuxHeaders}/include/linux/capability.h'" # required to link bindings
+    (lib.enableFeature withCapAudit "cap-audit")
+    (lib.withFeatureAs withCapAudit "vmlinux-h" "provided")
+    (lib.withFeatureAs withCapAudit "vmlinux-h-path" ./vmlinux.h)
   ];
 
   passthru = {

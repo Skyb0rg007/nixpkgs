@@ -10893,4 +10893,8 @@ with pkgs;
   };
 
   feishin-web = feishin.override { webVersion = true; };
+
+  libcap_ng-audit = callPackage ../by-name/li/libcap_ng/package.nix {
+    withCapAudit = true;
+  };
 }
