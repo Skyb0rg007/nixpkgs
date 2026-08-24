@@ -184,6 +184,7 @@
   ./programs/bazecor.nix
   ./programs/bcc.nix
   ./programs/benchexec.nix
+  ./programs/blueferry.nix
   ./programs/browserpass.nix
   ./programs/btrfs-heatmap.nix
   ./programs/calls.nix
