@@ -381,6 +381,7 @@ rec {
       upstreamWants,
       packages ? cfg.packages,
       package ? cfg.package,
+      extraFiles ? { },
     }:
     let
       typeDir =
@@ -411,6 +412,11 @@ rec {
             else
               cp -pd $fn $out/
             fi
+          elif [ -d $fn ]; then
+            # Merge directories (e.g. portable profiles) so that other files
+            # can be added to them.
+            mkdir -p $out/$i
+            ${lndir} $fn $out/$i
           else
             ln -s $fn $out/
           fi
@@ -542,6 +548,15 @@ rec {
               ln -sfn '../${name}' $out/'${name2}.requires'/
             '') (unit.requiredBy or [ ])
           ) units
+        )}
+
+        # Symlink additional non-unit files, taking precedence over files
+        # provided by systemd or systemd.packages.
+        ${concatStrings (
+          mapAttrsToList (path: source: ''
+            mkdir -p "$(dirname $out/'${path}')"
+            ln -sfn '${source}' $out/'${path}'
+          '') extraFiles
         )}
 
         ${optionalString (type == "system") ''
