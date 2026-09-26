@@ -701,6 +701,7 @@ stdenv.mkDerivation (finalAttrs: {
       withMachined
       withNetworkd
       withNspawn
+      withOpenSSL
       withRepart
       withPortabled
       withSysupdate

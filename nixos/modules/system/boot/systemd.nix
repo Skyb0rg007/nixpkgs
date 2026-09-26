@@ -223,6 +223,29 @@ let
     "systemd-repart.socket"
   ]
   ++ [
+    # System metrics and reports, see systemd-report(1)
+    "systemd-report@.service"
+    "systemd-report.socket"
+    "systemd-report-basic@.service"
+    "systemd-report-basic.socket"
+    "systemd-report-cgroup@.service"
+    "systemd-report-cgroup.socket"
+    "systemd-report-files@.service"
+    "systemd-report-files.socket"
+    "systemd-report-sign-tsm@.service"
+    "systemd-report-sign-tsm.socket"
+    "systemd-journalctl-metrics@.service"
+    "systemd-journalctl-metrics.socket"
+  ]
+  ++ optionals cfg.package.withOpenSSL [
+    "systemd-report-sign-plain@.service"
+    "systemd-report-sign-plain.socket"
+  ]
+  ++ optionals (cfg.package.withOpenSSL && cfg.package.withTpm2Tss) [
+    "systemd-report-sign-tpm2@.service"
+    "systemd-report-sign-tpm2.socket"
+  ]
+  ++ [
     "systemd-exit.service"
     "systemd-update-done.service"
 
@@ -827,6 +850,24 @@ in
       path = [ pkgs.gnupgMinimal ];
     };
     systemd.services.systemd-pstore.wantedBy = [ "sysinit.target" ]; # see #81138
+
+    # Upstream does not enable the systemd-report sockets by default.
+    # systemd-report-files.socket is left disabled, since it is accessible to
+    # all users but runs as root with full capabilities, and only serves files
+    # placed in /etc/systemd/report.files.
+    systemd.sockets.systemd-report.wantedBy = [ "sockets.target" ];
+    systemd.sockets.systemd-report-basic.wantedBy = [ "sockets.target" ];
+    systemd.sockets.systemd-report-cgroup.wantedBy = [ "sockets.target" ];
+    systemd.sockets.systemd-report-sign-tsm.wantedBy = [ "sockets.target" ];
+    systemd.sockets.systemd-journalctl-metrics.wantedBy = [ "sockets.target" ];
+    systemd.sockets.systemd-report-sign-plain = mkIf cfg.package.withOpenSSL {
+      wantedBy = [ "sockets.target" ];
+    };
+    systemd.sockets.systemd-report-sign-tpm2 =
+      mkIf (cfg.package.withOpenSSL && cfg.package.withTpm2Tss)
+        {
+          wantedBy = [ "sockets.target" ];
+        };
 
     # NixOS has kernel modules in a different location, so override that here.
     systemd.services.kmod-static-nodes.unitConfig.ConditionFileNotEmpty = [
