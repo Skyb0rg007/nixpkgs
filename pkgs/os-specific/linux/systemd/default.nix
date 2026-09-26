@@ -694,6 +694,7 @@ stdenv.mkDerivation (finalAttrs: {
       withEfi
       withFido2
       withHostnamed
+      withImds
       withImportd
       withKmod
       withLocaled
