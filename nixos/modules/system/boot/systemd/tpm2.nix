@@ -21,6 +21,12 @@
     };
 
     systemd.tpm2.pcrphases.enable = lib.mkEnableOption "systemd boot phase measurements";
+    systemd.tpm2.softwareFallback.enable = lib.mkEnableOption ''
+      a software TPM as a fallback when no TPM2 device is available. The
+      software TPM stores its state in the EFI System Partition, and is only
+      used when booted with EFI. See
+      {manpage}`systemd-tpm2-swtpm.service(8)`
+    '';
 
     boot.initrd.systemd.tpm2.enable = lib.mkEnableOption "systemd initrd TPM2 support" // {
       default = config.boot.initrd.systemd.package.withTpm2Units;
@@ -47,6 +53,22 @@
           "systemd-pcrextend@.service"
           "systemd-pcrlogin@.service"
         ];
+      }
+    )
+    (
+      let
+        cfg = config.systemd;
+      in
+      lib.mkIf (cfg.tpm2.enable && cfg.tpm2.softwareFallback.enable) {
+        systemd.additionalUpstreamSystemUnits = [ "systemd-tpm2-swtpm.service" ];
+        # systemd-tpm2-generator only pulls in the software TPM when requested
+        # on the kernel command line and swtpm is available.
+        boot.kernelParams = [ "systemd.tpm2_software_fallback=1" ];
+        systemd.generatorPath = [ pkgs.swtpm ];
+        systemd.services.systemd-tpm2-swtpm = {
+          path = [ pkgs.swtpm ];
+          serviceConfig.ExecSearchPath = lib.makeBinPath [ pkgs.swtpm ];
+        };
       }
     )
     (
@@ -97,6 +119,7 @@
       lib.mkIf (cfg.enable && cfg.tpm2.enable && cfg.tpm2.pcrphases.enable) {
         boot.initrd.systemd.additionalUpstreamUnits = [
           "systemd-pcrphase-initrd.service"
+          "systemd-pcrosseparator.service"
         ];
         boot.initrd.systemd.services.systemd-pcrphase-initrd.wantedBy = [ "initrd.target" ];
         boot.initrd.systemd.storePaths = [ "${cfg.package}/lib/systemd/systemd-pcrextend" ];

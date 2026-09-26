@@ -261,6 +261,7 @@
   "systemd-tmpfiles-setup-dev-early.service(8)": "https://www.freedesktop.org/software/systemd/man/systemd-tmpfiles-setup-dev-early.service.html",
   "systemd-tmpfiles-setup-dev.service(8)": "https://www.freedesktop.org/software/systemd/man/systemd-tmpfiles-setup-dev.service.html",
   "systemd-tmpfiles-setup.service(8)": "https://www.freedesktop.org/software/systemd/man/systemd-tmpfiles-setup.service.html",
+  "systemd-tpm2-swtpm.service(8)": "https://www.freedesktop.org/software/systemd/man/systemd-tpm2-swtpm.service.html",
   "systemd-tty-ask-password-agent(1)": "https://www.freedesktop.org/software/systemd/man/systemd-tty-ask-password-agent.html",
   "systemd-udev-settle.service(8)": "https://www.freedesktop.org/software/systemd/man/systemd-udev-settle.service.html",
   "systemd-udevd(8)": "https://www.freedesktop.org/software/systemd/man/systemd-udevd.html",
