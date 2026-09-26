@@ -213,6 +213,31 @@ in
       '';
     };
 
+    systemd.user.portableProfiles = lib.mkOption {
+      type = lib.types.attrsOf (
+        lib.types.attrsOf (lib.types.attrsOf (lib.types.attrsOf utils.systemdUtils.unitOptions.unitOption))
+      );
+      default = { };
+      example = {
+        nonetwork-strict.service = {
+          Service = {
+            PrivateNetwork = true;
+            ProtectHome = true;
+          };
+        };
+      };
+      description = ''
+        Profiles for portable services attached to per-user instances of
+        {manpage}`systemd-portabled(8)`. Each profile maps a unit type
+        (such as `service` or `socket`) to a drop-in that is written to
+        {file}`/etc/systemd/user/portable/profile/NAME/TYPE.conf`.
+
+        Defining a drop-in for one of the profiles shipped with systemd
+        (`default`, `nonetwork`, `strict` or `trusted`) replaces that
+        drop-in entirely.
+      '';
+    };
+
     systemd.additionalUpstreamUserUnits = lib.mkOption {
       default = [ ];
       type = lib.types.listOf lib.types.str;
@@ -235,6 +260,15 @@ in
         inherit (cfg) units;
         upstreamUnits = upstreamUserUnits;
         upstreamWants = [ "sockets.target.wants" ];
+        extraFiles = lib.concatMapAttrs (
+          profile:
+          lib.mapAttrs' (
+            type: settings:
+            lib.nameValuePair "portable/profile/${profile}/${type}.conf" (
+              pkgs.writeText "${type}.conf" (utils.systemdUtils.lib.settingsToSections settings)
+            )
+          )
+        ) cfg.portableProfiles;
       };
 
       "systemd/user.conf".text = utils.systemdUtils.lib.settingsToSections cfg.settings;
