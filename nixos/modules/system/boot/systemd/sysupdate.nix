@@ -41,7 +41,7 @@ in
         The timer configuration for performing the update.
 
         By default, the upstream configuration is used:
-        <https://github.com/systemd/systemd/blob/main/units/systemd-sysupdate.timer>
+        <https://github.com/systemd/systemd/blob/main/units/systemd-sysupdate-update.timer>
       '';
     };
 
@@ -129,12 +129,40 @@ in
     ];
 
     systemd.additionalUpstreamSystemUnits = [
+      "systemd-sysupdate-update.service"
+      "systemd-sysupdate-update.timer"
+      # Aliases of the units above, which were renamed in systemd 262
       "systemd-sysupdate.service"
       "systemd-sysupdate.timer"
+      "systemd-sysupdate-auto-enable.service"
       "systemd-sysupdate-reboot.service"
       "systemd-sysupdate-reboot.timer"
       "systemd-sysupdated.service"
+      # Varlink API
+      "systemd-sysupdate.socket"
+      "systemd-sysupdate@.service"
+      # Notify other components of updates
+      "systemd-sysupdate-notify-sysext.socket"
+      "systemd-sysupdate-notify-sysext@.service"
+    ]
+    ++ lib.optionals config.systemd.package.withBootloader [
+      "systemd-sysupdate-notify-bootctl.socket"
+      "systemd-sysupdate-notify-bootctl@.service"
+    ]
+    ++ lib.optionals config.systemd.package.withTpm2Units [
+      "systemd-sysupdate-notify-pcrlock.socket"
+      "systemd-sysupdate-notify-pcrlock@.service"
     ];
+
+    systemd.sockets = {
+      systemd-sysupdate-notify-sysext.wantedBy = [ "sockets.target" ];
+      systemd-sysupdate-notify-bootctl = lib.mkIf config.systemd.package.withBootloader {
+        wantedBy = [ "sockets.target" ];
+      };
+      systemd-sysupdate-notify-pcrlock = lib.mkIf config.systemd.package.withTpm2Units {
+        wantedBy = [ "sockets.target" ];
+      };
+    };
 
     systemd.services.systemd-sysupdated = {
       aliases = [ "dbus-org.freedesktop.sysupdate1.service" ];
@@ -142,7 +170,7 @@ in
     };
 
     systemd.timers = {
-      "systemd-sysupdate" = {
+      "systemd-sysupdate-update" = {
         wantedBy = [ "timers.target" ];
         timerConfig = cfg.timerConfig;
       };
