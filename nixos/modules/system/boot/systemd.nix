@@ -43,11 +43,16 @@ let
     "time-set.target"
     "time-sync.target"
     "first-boot-complete.target"
+    "clonesetup.target"
   ]
   ++ optionals cfg.package.withCryptsetup [
     "cryptsetup.target"
     "cryptsetup-pre.target"
     "remote-cryptsetup.target"
+
+    # Varlink API
+    "systemd-cryptenroll.socket"
+    "systemd-cryptenroll@.service"
   ]
   ++ [
     "sigpwr.target"
@@ -212,6 +217,7 @@ let
     "dbus-org.freedesktop.hostname1.service"
     "systemd-hostnamed.service"
     "systemd-hostnamed.socket"
+    "systemd-machine-tag@.service"
   ]
   ++ optionals cfg.package.withPortabled [
     "dbus-org.freedesktop.portable1.service"
