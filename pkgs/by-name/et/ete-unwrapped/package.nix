@@ -12,7 +12,6 @@
   libpng,
   libtheora,
   libx11,
-  lua5_4,
   minizip,
   openal,
   SDL2,
@@ -49,7 +48,6 @@ stdenv.mkDerivation (finalAttrs: {
     libpng
     libtheora
     libx11
-    lua5_4
     minizip
     openal
     SDL2
