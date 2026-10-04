@@ -13,7 +13,6 @@
   libpng,
   libsndfile,
   libvorbis,
-  lua5_2_compat,
   makeDesktopItem,
   makeWrapper,
   miniupnpc,
@@ -30,9 +29,6 @@
   testers,
   asio,
 }:
-let
-  lua = lua5_2_compat;
-in
 
 stdenv.mkDerivation (finalAttrs: {
   outputs = [
@@ -67,7 +63,6 @@ stdenv.mkDerivation (finalAttrs: {
     libpng
     libsndfile
     libvorbis
-    lua
     miniupnpc
     openal
     SDL2
