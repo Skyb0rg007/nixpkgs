@@ -14,13 +14,9 @@
   libx11,
   libxi,
   libxcursor,
-  lua5_2_compat,
   makeDesktopItem,
   copyDesktopItems,
 }:
-let
-  lua = lua5_2_compat;
-in
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "skyemu";
@@ -52,7 +48,6 @@ stdenv.mkDerivation (finalAttrs: {
     libx11
     libxi
     libxcursor
-    lua
   ];
 
   cmakeFlags = [
