@@ -8,7 +8,6 @@
   dpdk,
   libbsd,
   libpcap,
-  lua5_3,
   numactl,
   util-linux,
   which,
@@ -39,7 +38,6 @@ stdenv.mkDerivation (finalAttrs: {
     dpdk
     libbsd
     libpcap
-    lua5_3
     numactl
     which
   ];
