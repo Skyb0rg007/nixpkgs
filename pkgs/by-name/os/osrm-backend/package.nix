@@ -9,7 +9,6 @@
   libzip,
   boost,
   lua5_2_compat,
-  luabind,
   onetbb,
   expat,
   nixosTests,
@@ -40,7 +39,6 @@ stdenv.mkDerivation (finalAttrs: {
     libzip
     boost
     lua
-    luabind
     onetbb
     expat
   ];
