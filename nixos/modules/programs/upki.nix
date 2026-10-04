@@ -68,6 +68,11 @@ in
         CacheDirectoryMode = "0755";
         UMask = "0022";
 
+        Restart = "on-failure";
+        RestartSec = "10s";
+        RestartSteps = 10;
+        RestartMaxDelaySec = "1h";
+
         # Hardening
         LockPersonality = true;
         MemoryDenyWriteExecute = true;
@@ -94,7 +99,7 @@ in
       description = "Update the upki cache every ${cfg.interval}";
       wantedBy = [ "timers.target" ];
       timerConfig = {
-        OnActiveSec = "0";
+        OnBootSec = "1min";
         OnUnitActiveSec = cfg.interval;
       };
     };
