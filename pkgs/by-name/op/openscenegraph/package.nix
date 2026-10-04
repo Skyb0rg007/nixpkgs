@@ -48,8 +48,6 @@
   libvncserver,
   lasSupport ? false,
   liblas,
-  luaSupport ? false,
-  lua5_2_compat,
   sdlSupport ? false,
   SDL2,
   restSupport ? false,
@@ -58,9 +56,6 @@
   withExamples ? false,
   fltk,
 }:
-let
-  lua = lua5_2_compat;
-in
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "openscenegraph";
@@ -110,7 +105,6 @@ stdenv.mkDerivation (finalAttrs: {
     ++ lib.optional pdfSupport poppler
     ++ lib.optional vncSupport libvncserver
     ++ lib.optional lasSupport liblas
-    ++ lib.optional luaSupport lua
     ++ lib.optional sdlSupport SDL2
     ++ lib.optional restSupport asio
     ++ lib.optionals withExamples [ fltk ]
