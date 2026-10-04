@@ -8,7 +8,6 @@
   lib,
   libpng,
   libx11,
-  lua5_2,
   luajit,
   meson,
   ninja,
@@ -44,7 +43,6 @@ stdenv.mkDerivation (finalAttrs: {
     jsoncpp
     libpng
     libx11
-    lua5_2
     luajit
     SDL2
     zlib
