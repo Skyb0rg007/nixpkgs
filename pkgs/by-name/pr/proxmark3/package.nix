@@ -10,7 +10,7 @@
   jansson,
   gd,
   whereami,
-  lua5_2_compat,
+  lua5_4,
   lz4,
   udevCheckHook,
   nix-update-script,
@@ -27,9 +27,6 @@
   hardwarePlatformExtras ? lib.optionalString withBlueshark "BTADDON",
   standalone ? "LF_SAMYRUN",
 }:
-let
-  lua = lua5_2_compat;
-in
 assert withBlueshark -> stdenv.hostPlatform.isLinux;
 stdenv.mkDerivation (finalAttrs: {
   pname = "proxmark3";
@@ -68,7 +65,9 @@ stdenv.mkDerivation (finalAttrs: {
     gd
     lz4
     whereami
-    lua
+    # The client only accepts the system Lua through `pkg-config lua5.4`
+    # and otherwise builds its bundled copy.
+    lua5_4
   ]
   ++ lib.optional withGui libsForQt5.qtbase
   ++ lib.optional withPython python3
