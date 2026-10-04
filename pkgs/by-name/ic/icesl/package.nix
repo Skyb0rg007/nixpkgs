@@ -13,15 +13,13 @@
   libxext,
   glibc,
   openssl,
-  lua5_2_compat,
-  luabind,
+  lua5_1,
   glfw,
   libgccjit,
   dialog,
   makeWrapper,
 }:
 let
-  lua = lua5_2_compat;
   lpath = lib.makeLibraryPath [
     libxmu
     libxi
@@ -34,10 +32,11 @@ let
     libxext
     glibc
     openssl
-    lua
+    # The binary and its bundled libluabind.so use the Lua 5.1 ABI.
+    lua5_1
     glfw
-    luabind
     libgccjit
+    stdenv.cc.cc.lib
   ];
 in
 stdenv.mkDerivation rec {
@@ -65,15 +64,19 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [ makeWrapper ];
   installPhase = ''
     cp -r ./ $out
-    rm $out/bin/*.so
-    mkdir $out/oldbin
+    # Use the nixpkgs Lua, but keep the bundled libluabind.so, since the
+    # nixpkgs luabind only provides a static library.
+    rm $out/bin/liblua.so
+    mkdir $out/lib $out/oldbin
+    mv $out/bin/libluabind.so $out/lib/libluabind.so
     mv $out/bin/IceSL-slicer $out/oldbin/IceSL-slicer
     runHook postInstall
   '';
 
   postInstall = ''
+    patchelf --set-rpath "${lpath}" $out/lib/libluabind.so
     patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
-      --set-rpath "${lpath}" \
+      --set-rpath "$out/lib:${lpath}" \
       $out/oldbin/IceSL-slicer
     makeWrapper $out/oldbin/IceSL-slicer $out/bin/icesl --prefix PATH : ${dialog}/bin
   '';
