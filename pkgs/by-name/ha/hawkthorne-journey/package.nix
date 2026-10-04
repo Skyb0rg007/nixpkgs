@@ -3,16 +3,12 @@
   stdenv,
   fetchFromGitHub,
   love,
-  lua5_2_compat,
   zip,
   makeWrapper,
   makeDesktopItem,
   copyDesktopItems,
   tmx2lua,
 }:
-let
-  lua = lua5_2_compat;
-in
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "hawkthorne-journey";
@@ -33,7 +29,6 @@ stdenv.mkDerivation (finalAttrs: {
 
   buildInputs = [
     love
-    lua
     tmx2lua
   ];
 
