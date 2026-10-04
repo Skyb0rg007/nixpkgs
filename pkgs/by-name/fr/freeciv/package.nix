@@ -3,7 +3,7 @@
   stdenv,
   fetchFromGitHub,
   autoreconfHook,
-  lua5_3,
+  lua5_4,
   pkg-config,
   python3,
   zlib,
@@ -61,7 +61,7 @@ stdenv.mkDerivation (finalAttrs: {
   ++ lib.optionals gtkClient [ wrapGAppsHook3 ];
 
   buildInputs = [
-    lua5_3
+    lua5_4
     zlib
     bzip2
     curl
@@ -94,6 +94,9 @@ stdenv.mkDerivation (finalAttrs: {
   '';
   configureFlags = [
     "--enable-shared"
+    # Use the system Lua; without this, a version mismatch silently falls back
+    # to the bundled copy.
+    "--enable-sys-lua=yes"
   ]
   ++ lib.optionals sdl2Client [
     "--enable-client=sdl2"
