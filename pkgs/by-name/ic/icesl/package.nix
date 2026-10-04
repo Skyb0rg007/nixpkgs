@@ -12,6 +12,7 @@
   libsm,
   libxext,
   glibc,
+  openssl,
   lua5_2_compat,
   luabind,
   glfw,
@@ -32,6 +33,7 @@ let
     libsm
     libxext
     glibc
+    openssl
     lua
     glfw
     luabind
@@ -40,20 +42,22 @@ let
 in
 stdenv.mkDerivation rec {
   pname = "iceSL";
-  version = "2.4.1";
+  version = "2.5.3";
 
+  # The download endpoint ignores `build` and always serves the latest
+  # release, so the hashes change whenever upstream publishes a new version.
   src =
     if stdenv.hostPlatform.system == "x86_64-linux" then
       fetchzip {
         url = "https://icesl.loria.fr/assets/other/download.php?build=${version}&os=amd64";
         extension = "zip";
-        sha256 = "0rrnkqkhlsjclif5cjbf17qz64vs95ja49xarxjvq54wb4jhbs4l";
+        hash = "sha256-9LxHisSWFtfMXayKQtlSi2D3a6rSZjflaAhc4/oTb+U=";
       }
     else if stdenv.hostPlatform.system == "i686-linux" then
       fetchzip {
         url = "https://icesl.loria.fr/assets/other/download.php?build=${version}&os=i386";
         extension = "zip";
-        sha256 = "0n2yyxzw0arkc70f0qli4n5chdlh9vc7aqizk4v7825mcglhwlyh";
+        hash = "sha256-n01gPYXvOwTVmf2m2YLgpsjiV0qcR+KpVDymRRXO9gc=";
       }
     else
       throw "Unsupported architecture";
