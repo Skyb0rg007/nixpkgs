@@ -2,7 +2,6 @@
   stdenv,
   lib,
   libidn,
-  lua5_2_compat,
   miniupnpc,
   expat,
   zlib,
@@ -14,9 +13,6 @@
   boost186,
   scons,
 }:
-let
-  lua = lua5_2_compat;
-in
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "swiften";
@@ -49,7 +45,6 @@ stdenv.mkDerivation (finalAttrs: {
 
   buildInputs = [
     libidn
-    lua
     miniupnpc
     expat
     zlib
