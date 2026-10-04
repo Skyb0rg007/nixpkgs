@@ -18,7 +18,6 @@
   icu,
   installShellFiles,
   libpng,
-  lua5_2_compat,
   python3,
   zlib,
   minizip,
@@ -28,9 +27,6 @@
   libxext,
   libx11,
 }:
-let
-  lua = lua5_2_compat;
-in
 
 stdenv.mkDerivation rec {
   pname = "widelands";
@@ -76,7 +72,6 @@ stdenv.mkDerivation rec {
     glew
     icu
     libpng
-    lua
     python3
     zlib
     minizip
