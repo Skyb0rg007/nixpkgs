@@ -21017,6 +21017,12 @@ self: super: with self; {
 
   torchWithVulkan = self.torch.override { vulkanSupport = true; };
 
+  torchWithXpu = self.torch.override {
+    xpuSupport = true;
+    cudaSupport = false;
+    rocmSupport = false;
+  };
+
   torchWithoutCuda = self.torch.override { cudaSupport = false; };
 
   torchWithoutRocm = self.torch.override { rocmSupport = false; };
