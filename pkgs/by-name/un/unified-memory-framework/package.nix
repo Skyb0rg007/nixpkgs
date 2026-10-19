@@ -84,6 +84,22 @@ stdenv.mkDerivation (finalAttrs: {
       --replace-fail \
         'set(UMF_LIBS umf_utils umf_ba umf_coarse $<BUILD_INTERFACE:''${UMF_HWLOC_NAME}>)' \
         'set(UMF_LIBS umf_utils umf_ba umf_coarse ''${UMF_HWLOC_NAME})'
+
+    # The IPC test scripts have their shebang below the license header, so
+    # ctest's exec fails with ENOEXEC. Run them through bash explicitly.
+    substituteInPlace test/CMakeLists.txt \
+      --replace-fail 'COMMAND ''${ARG_TEST}.''${EXT}' 'COMMAND bash ''${ARG_TEST}.''${EXT}'
+
+    # These tests share a file name in the same working directory and race
+    # when ctest runs them in parallel.
+    for test in disjoint_pool_file_prov provider_file_memory provider_file_memory_ipc provider_tracking_fixture_tests; do
+      substituteInPlace test/$test.cpp \
+        --replace-fail '"tmp_file"' "\"tmp_file_$test\""
+    done
+    for test in jemalloc_coarse_file scalable_coarse_file; do
+      substituteInPlace test/pools/$test.cpp \
+        --replace-fail 'ParamsCreate(FILE_PATH,' "ParamsCreate((char *)\"tmp_file_$test\","
+    done
   '';
 
   # If included, jemalloc needs to be vendored, as they don't support using a pre-built version
