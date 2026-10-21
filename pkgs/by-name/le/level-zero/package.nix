@@ -32,6 +32,8 @@ stdenv.mkDerivation (finalAttrs: {
 
   postFixup = ''
     addDriverRunpath $out/lib/libze_loader.so
+    # The loader dlopen()s its own layers (e.g. libze_tracing_layer.so.1) by name
+    patchelf --add-rpath $out/lib $out/lib/libze_loader.so
   '';
 
   setupHook = ./setup-hook.sh;
