@@ -84,6 +84,11 @@ stdenv.mkDerivation (finalAttrs: {
       --replace-fail \
         'set(UMF_LIBS umf_utils umf_ba umf_coarse $<BUILD_INTERFACE:''${UMF_HWLOC_NAME}>)' \
         'set(UMF_LIBS umf_utils umf_ba umf_coarse ''${UMF_HWLOC_NAME})'
+
+    # The IPC test scripts have their shebang below the license header, so
+    # ctest's exec fails with ENOEXEC. Run them through bash explicitly.
+    substituteInPlace test/CMakeLists.txt \
+      --replace-fail 'COMMAND ''${ARG_TEST}.''${EXT}' 'COMMAND bash ''${ARG_TEST}.''${EXT}'
   '';
 
   # If included, jemalloc needs to be vendored, as they don't support using a pre-built version
