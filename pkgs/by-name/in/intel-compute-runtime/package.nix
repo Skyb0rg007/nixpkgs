@@ -66,6 +66,9 @@ stdenv.mkDerivation (finalAttrs: {
     } \
       $out/lib/intel-opencl/libigdrcl.so \
       $out/lib/libze_intel_gpu.so.1
+
+    # ocloc dlopen()s libigc/libigdfcl
+    patchelf --add-rpath ${lib.makeLibraryPath [ intel-graphics-compiler ]} $out/lib/libocloc.so
   '';
 
   passthru = {
