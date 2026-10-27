@@ -64,6 +64,8 @@
   qrencode,
   libarchive,
   llvmPackages,
+  rustc,
+  rust-bindgen,
 
   # the (optional) BPF feature requires bpftool, libbpf, clang and llvm-strip to
   # be available during build time.
@@ -144,6 +146,7 @@
   withQrencode ? true,
   withRemote ? true,
   withResolved ? true,
+  withRust ? true,
   withShellCompletions ? true,
   withSysinstall ? true,
   withSysusers ? true,
@@ -211,13 +214,14 @@ let
 in
 stdenv.mkDerivation (finalAttrs: {
   inherit pname;
-  version = "262";
+  version = "262.1-unstable-2026-10-27";
 
   src = fetchFromGitHub {
     owner = "systemd";
     repo = "systemd";
-    tag = "v${finalAttrs.version}";
-    hash = "sha256-oGzFW2dD8abLXBwDczr1hvl712s03CHTUqOz6uPfhmQ=";
+    # tag = "v${finalAttrs.version}";
+    rev = "79b69ae9beee385457dabe63d22b6bfa0a9a602e";
+    hash = "sha256-3llevDn72AGI8E5PbHwFlrrMpUEIJ3b38kjjNgTNDWU=";
   };
 
   # PATCH POLICY
@@ -321,6 +325,10 @@ stdenv.mkDerivation (finalAttrs: {
     bpftools
     buildPackages.llvmPackages.clang
     buildPackages.llvmPackages.libllvm
+  ]
+  ++ lib.optionals withRust [
+    rustc
+    rust-bindgen
   ];
 
   autoPatchelfFlags = [
@@ -486,6 +494,8 @@ stdenv.mkDerivation (finalAttrs: {
     (lib.mesonEnable "libcryptsetup" withCryptsetup)
     (lib.mesonEnable "libcryptsetup-plugins" withCryptsetup)
     (lib.mesonEnable "p11kit" (withHomed || withCryptsetup))
+    (lib.mesonEnable "integritysetup" withCryptsetup)
+    (lib.mesonEnable "veritysetup" withCryptsetup)
 
     # FIDO2
     (lib.mesonEnable "libfido2" withFido2)
@@ -516,6 +526,7 @@ stdenv.mkDerivation (finalAttrs: {
     (lib.mesonEnable "seccomp" withLibseccomp)
     (lib.mesonEnable "selinux" withSelinux)
     (lib.mesonEnable "tpm2" withTpm2Tss)
+    (lib.mesonEnable "measure" (withOpenSSL && withTpm2Tss))
     (lib.mesonEnable "pcre2" withPCRE2)
     (lib.mesonEnable "bpf-framework" withLibBPF)
     (lib.mesonEnable "bootloader" withBootloader)
@@ -587,6 +598,9 @@ stdenv.mkDerivation (finalAttrs: {
     (lib.mesonOption "libc" "musl")
     (lib.mesonBool "gshadow" false)
     (lib.mesonBool "idn" false)
+  ]
+  ++ lib.optionals withRust [
+    (lib.mesonEnable "rust" true)
   ];
   preConfigure = ''
     substituteInPlace src/libsystemd/sd-journal/catalog.c \
