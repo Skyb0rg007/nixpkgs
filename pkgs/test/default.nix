@@ -184,6 +184,9 @@ in
 
   buildRustCrate = recurseIntoAttrs (callPackage ../build-support/rust/build-rust-crate/test { });
   importCargoLock = recurseIntoAttrs (callPackage ../build-support/rust/test/import-cargo-lock { });
+  cargoLockOverrides = recurseIntoAttrs (
+    callPackage ../build-support/rust/test/cargo-lock-overrides { }
+  );
 
   vim = callPackage ./vim { };
 

@@ -39,6 +39,10 @@
           ;
       };
 
+      applyCargoLockOverrides =
+        buildPackages.callPackage ../../../build-support/rust/apply-cargo-lock-overrides.nix
+          { };
+
       importCargoLock = buildPackages.callPackage ../../../build-support/rust/import-cargo-lock.nix {
         inherit cargo;
       };

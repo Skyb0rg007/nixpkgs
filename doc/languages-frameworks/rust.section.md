@@ -429,6 +429,42 @@ rustPlatform.buildRustPackage {
 }
 ```
 
+### Overriding locked crates {#overriding-locked-crates}
+
+`cargoLockOverrides` replaces locked crates.io dependencies with newer
+semver-compatible versions, for example to pull in a security fix without
+patching `Cargo.lock`. Each entry gives the crate `name`, `version` and
+`checksum` (the sha256 of the `.crate` file, as found in a `Cargo.lock` or in
+the crates.io index):
+
+```nix
+rustPlatform.buildRustPackage {
+  # ...
+  cargoHash = "sha256-...";
+
+  cargoLockOverrides = [
+    {
+      name = "rustls";
+      version = "0.23.5";
+      checksum = "afabcee0551bd1aa3e18e5adbf2c0544722014b899adb31bd186ec638d3da97e";
+    }
+  ];
+}
+```
+
+The upstream lockfile is still vendored and checked against `cargoHash` (or
+`cargoLock`) as usual, so adding or changing overrides does not change
+`cargoHash`. Each override crate is fetched separately, and during `patchPhase`
+every locked crate that has a newer compatible override is updated with
+`cargo update --precise --offline`. If an overridden crate needs dependencies
+that are not already locked, add them to `cargoLockOverrides` as well.
+
+When a package has no upstream `Cargo.lock`, `cargoHash` and `cargoLock` can be
+left out and every dependency listed in `cargoLockOverrides`. The lockfile is
+then generated during the build with `cargo generate-lockfile --offline`, which
+can only resolve to the listed crates. Only crates.io dependencies can be
+provided this way.
+
 ### Compiling non-Rust packages that include Rust code {#compiling-non-rust-packages-that-include-rust-code}
 
 Several non-Rust packages incorporate Rust code for performance- or

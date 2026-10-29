@@ -44,11 +44,27 @@ EOF
 # After unpacking and applying patches, check that the Cargo.lock matches our
 # src package. Note that we do this after the patchPhase, because the
 # patchPhase may create the Cargo.lock if upstream has not shipped one.
+# Run cargo against the vendored crates only, without touching $HOME.
+cargoLockOverridesCargo() {
+    CARGO_HOME="${CARGO_HOME:-$NIX_BUILD_TOP/.cargo-lock-overrides-home}" \
+      cargo "$@" --offline
+}
+
 cargoSetupPostPatchHook() {
     echo "Executing cargoSetupPostPatchHook"
 
     cargoDepsLockfile="$cargoDepsCopy/Cargo.lock"
     srcLockfile="$(pwd)/${cargoRoot:+$cargoRoot/}Cargo.lock"
+
+    # All dependencies come from cargoLockOverrides: there is no upstream
+    # lockfile to validate, so generate one from the vendored crates.
+    if [ -e "$cargoDepsCopy/.cargo-lock-generate" ]; then
+      echo "Generating $srcLockfile from the vendored crates"
+      (cd "$(dirname "$srcLockfile")" && cargoLockOverridesCargo generate-lockfile)
+      unset cargoDepsCopy
+      echo "Finished cargoSetupPostPatchHook"
+      return
+    fi
 
     echo "Validating consistency between $srcLockfile and $cargoDepsLockfile"
     if ! @diff@ $srcLockfile $cargoDepsLockfile; then
@@ -79,6 +95,15 @@ cargoSetupPostPatchHook() {
       echo
 
       exit 1
+    fi
+
+    # Move locked crates to the newer versions provided by cargoLockOverrides.
+    if [ -s "$cargoDepsCopy/.cargo-lock-overrides" ]; then
+      local spec version
+      while read -r spec version; do
+        echo "Overriding $spec with version $version"
+        (cd "$(dirname "$srcLockfile")" && cargoLockOverridesCargo update --package "$spec" --precise "$version")
+      done < "$cargoDepsCopy/.cargo-lock-overrides"
     fi
 
     unset cargoDepsCopy

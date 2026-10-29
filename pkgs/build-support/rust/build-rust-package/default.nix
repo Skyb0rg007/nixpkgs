@@ -2,6 +2,7 @@
   lib,
   importCargoLock,
   fetchCargoVendor,
+  applyCargoLockOverrides,
   stdenv,
   cargoBuildHook,
   cargoCheckHook,
@@ -35,6 +36,7 @@ lib.extendMkDerivation {
     "depsExtraArgs"
     "cargoUpdateHook"
     "cargoLock"
+    "cargoLockOverrides"
     "RUSTFLAGS"
   ];
 
@@ -58,6 +60,10 @@ lib.extendMkDerivation {
       cargoDeps ? null,
       cargoHash ? null,
       cargoLock ? null,
+      # Newer semver-compatible crates.io crates to use instead of the locked
+      # ones, as a list of `{ name, version, checksum }`. Without any other
+      # dependency source the lockfile is generated from these crates alone.
+      cargoLockOverrides ? [ ],
       cargoVendorDir ? null,
       checkType ? buildType,
       buildNoDefaultFeatures ? false,
@@ -94,16 +100,22 @@ lib.extendMkDerivation {
         // args.env or { };
 
       cargoDeps =
-        if cargoVendorDir != null then
-          null
-        else if cargoDeps != null then
-          cargoDeps
-        else if cargoLock != null then
-          importCargoLock cargoLock
-        else if finalAttrs.cargoHash == null then
-          throw "cargoHash, cargoVendorDir, cargoDeps, or cargoLock must be set"
-        else
-          fetchCargoVendor (
+        let
+          baseCargoDeps =
+            if cargoVendorDir != null then
+              null
+            else if cargoDeps != null then
+              cargoDeps
+            else if cargoLock != null then
+              importCargoLock cargoLock
+            else if finalAttrs.cargoHash == null then
+              if cargoLockOverrides != [ ] then
+                null
+              else
+                throw "cargoHash, cargoVendorDir, cargoDeps, cargoLock, or cargoLockOverrides must be set"
+            else
+              fetchBaseCargoDeps;
+          fetchBaseCargoDeps = fetchCargoVendor (
             getOptionalAttrs [
               "name"
               "pname"
@@ -123,6 +135,22 @@ lib.extendMkDerivation {
             }
             // depsExtraArgs
           );
+        in
+        if cargoLockOverrides == [ ] then
+          baseCargoDeps
+        else
+          assert lib.assertMsg (
+            cargoVendorDir == null
+          ) "cargoLockOverrides cannot be used together with cargoVendorDir";
+          applyCargoLockOverrides {
+            name =
+              if cargoDepsName != null then
+                cargoDepsName
+              else
+                finalAttrs.name or "${finalAttrs.pname}-${finalAttrs.version}";
+            cargoDeps = baseCargoDeps;
+            overrides = cargoLockOverrides;
+          };
       inherit
         buildAndTestSubdir
         cargoHash
