@@ -73,6 +73,11 @@
     meta.license = lib.licenses.mit;
   } ./cargo-nextest-hook.sh;
 
+  cargoRegistryHook = makeSetupHook {
+    name = "cargo-registry-hook.sh";
+    meta.license = lib.licenses.mit;
+  } ./cargo-registry-hook.sh;
+
   cargoSetupHook = makeSetupHook {
     name = "cargo-setup-hook.sh";
     substitutions = {

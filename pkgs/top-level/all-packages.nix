@@ -3901,6 +3901,8 @@ with pkgs;
 
   makeRustPlatform = callPackage ../development/compilers/rust/make-rust-platform.nix { };
 
+  rustCrates = callPackage ../development/rust-crates { };
+
   buildRustCrate =
     let
       # Returns a true if the builder's rustc was built with support for the target.

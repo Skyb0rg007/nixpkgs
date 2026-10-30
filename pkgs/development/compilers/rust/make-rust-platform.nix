@@ -68,6 +68,7 @@
         cargoCheckHook
         cargoInstallHook
         cargoNextestHook
+        cargoRegistryHook
         cargoSetupHook
         maturinBuildHook
         bindgenHook

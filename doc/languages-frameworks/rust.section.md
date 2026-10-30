@@ -115,6 +115,63 @@ rustPlatform.buildRustPackage (finalAttrs: {
 })
 ```
 
+### Using crates from the nixpkgs crate set {#using-the-nixpkgs-crate-set}
+
+Instead of vendoring the dependencies of each package from its `Cargo.lock`,
+`buildRustPackage` can take them from `rustCrates`, a crate set maintained in
+nixpkgs (`pkgs/development/rust-crates`), similar to how Debian and Fedora
+package Rust crates. nixpkgs packages one version per semver-compatible *slot*
+of a crate: `1.0.228` is in slot `1`, `0.3.17` in slot `0.3` and `0.0.7` in
+slot `0.0.7`.
+
+A package lists its direct dependencies in `crateDeps`:
+
+```nix
+rustPlatform.buildRustPackage (finalAttrs: {
+  pname = "ripgrep";
+  version = "15.2.0";
+
+  src = fetchFromGitHub {
+    # ...
+  };
+
+  crateDeps = [
+    "aho-corasick@1"
+    "bstr@1:std"
+    "regex-automata@0.4:dfa-onepass,hybrid,meta,nfa,perf,std,syntax"
+    "textwrap@0.16!"
+    # ...
+  ];
+})
+```
+
+Each entry is `name@slot`, optionally followed by `!` if the dependency is
+used with `default-features = false`, and by `:` and a comma-separated list of
+enabled features. The transitive dependencies are computed at evaluation time
+from the metadata of the crate set, and the build generates a fresh
+`Cargo.lock` against exactly these crates, replacing upstream's.
+
+`crateDeps` is generated, and the crates it needs are added to `rustCrates`
+(or bumped, if a requirement is not met), by:
+
+```ShellSession
+$ maintainers/scripts/rust-crates/rust-crates.py deps -A ripgrep --write
+```
+
+Run it again whenever the package is updated. `--write` replaces `crateDeps`,
+or `cargoHash` when migrating a package. The script has further commands to
+`add`, `update`, `check` and `prune` crates; see `--help`.
+
+Crates are only bumped when a requirement demands it or on request, to limit
+rebuilds and churn. Fixes that should apply to every package using a crate,
+such as unbundling vendored C libraries, go in
+`pkgs/development/rust-crates/overrides.nix`.
+
+Only dependencies from crates.io are supported. Packages with `git`
+dependencies, or `[patch]` sections pointing to them, have to keep using
+`cargoHash`. `extraCrates` can add further registry entries, such as a pinned
+version from `rustCrates.fetchCrateSource { name, version, hash }`.
+
 ### Importing a `Cargo.lock` file {#importing-a-cargo.lock-file}
 
 Using a vendored hash (`cargoHash`) is tedious when using
@@ -509,6 +566,10 @@ you of the correct hash.
   `Cargo.toml`/`Cargo.lock` files are not in `sourceRoot`, then the
   optional `cargoRoot` is used to specify the Cargo root directory
   relative to `sourceRoot`.
+* `cargoRegistryHook`: generate `Cargo.lock` against a crate registry built
+  by `rustCrates.mkRegistry`, see
+  [](#using-the-nixpkgs-crate-set). `buildRustPackage` adds it automatically
+  when `crateDeps` is set. It must come before `cargoSetupHook`.
 * `cargoBuildHook`: use Cargo to build a crate. If the crate to be
   built is a crate in e.g. a Cargo workspace, the relative path to the
   crate to build can be set through the optional `buildAndTestSubdir`

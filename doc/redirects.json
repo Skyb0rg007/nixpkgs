@@ -4513,6 +4513,9 @@
   "compiling-rust-applications-with-cargo": [
     "index.html#compiling-rust-applications-with-cargo"
   ],
+  "using-the-nixpkgs-crate-set": [
+    "index.html#using-the-nixpkgs-crate-set"
+  ],
   "importing-a-cargo.lock-file": [
     "index.html#importing-a-cargo.lock-file"
   ],
