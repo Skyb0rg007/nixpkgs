@@ -2,11 +2,13 @@
   lib,
   buildPythonPackage,
   rustPlatform,
+  rustCrates,
   fetchFromGitHub,
   libiconv,
   dirty-equals,
   pytestCheckHook,
   nix-update-script,
+  _experimental-update-script-combinators,
 }:
 
 buildPythonPackage rec {
@@ -21,15 +23,31 @@ buildPythonPackage rec {
     hash = "sha256-d87RUXKEmZXxVQZnAvjwRKSP6F3Z+kXxg/LdY2l9B+k=";
   };
 
-  postPatch = ''
-    cp ${./Cargo.lock} Cargo.lock
-  '';
-
-  cargoDeps = rustPlatform.importCargoLock { lockFile = ./Cargo.lock; };
+  cargoDeps = rustCrates.mkRegistry {
+    crateDeps = [
+      "ahash@0.8"
+      "bitvec@1"
+      "codspeed-criterion-compat@2"
+      "indexmap@2"
+      "lexical-parse-float@1:format"
+      "libfuzzer-sys@0.4"
+      "num-bigint@0.4"
+      "num-traits@0.2"
+      "paste@1"
+      "pyo3-build-config@0.27"
+      "pyo3@0.27:auto-initialize,generate-import-lib,num-bigint"
+      "serde@1"
+      "serde_json@1:arbitrary_precision,float_roundtrip,preserve_order"
+      "smallvec@1"
+    ];
+  };
 
   buildAndTestSubdir = "crates/jiter-python";
 
-  nativeBuildInputs = [ rustPlatform.cargoSetupHook ];
+  nativeBuildInputs = [
+    rustPlatform.cargoRegistryHook
+    rustPlatform.cargoSetupHook
+  ];
 
   build-system = [ rustPlatform.maturinBuildHook ];
 
@@ -42,7 +60,10 @@ buildPythonPackage rec {
     pytestCheckHook
   ];
 
-  passthru.updateScript = nix-update-script { extraArgs = [ "--generate-lockfile" ]; };
+  passthru.updateScript = _experimental-update-script-combinators.sequence [
+    (nix-update-script { })
+    (rustCrates.updateScript { })
+  ];
 
   meta = {
     description = "Fast iterable JSON parser";

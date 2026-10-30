@@ -12,7 +12,10 @@ let
 
     passthru.updateScript = ./update.sh;
 
-    cargoLock.lockFile = ./src/Cargo.lock;
+    crateDeps = [
+      "serde@1"
+      "serde_json@1"
+    ];
   };
 
   hocon-validator =

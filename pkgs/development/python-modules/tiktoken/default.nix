@@ -4,6 +4,7 @@
   buildPythonPackage,
   fetchPypi,
   rustPlatform,
+  rustCrates,
   cargo,
   rustc,
   setuptools,
@@ -20,16 +21,12 @@ let
     inherit pname version;
     hash = "sha256-sYun7isJOGOXj8sU90s3B83I1NTTg2hTzn7GB3ITmTE=";
   };
-  postPatch = ''
-    cp ${./Cargo.lock} Cargo.lock
-  '';
 in
 buildPythonPackage {
   inherit
     pname
     version
     src
-    postPatch
     ;
   pyproject = true;
 
@@ -38,17 +35,18 @@ buildPythonPackage {
     setuptools-rust
   ];
 
-  cargoDeps = rustPlatform.fetchCargoVendor {
-    inherit
-      pname
-      version
-      src
-      postPatch
-      ;
-    hash = "sha256-daIKasW/lwYwIqMs3KvCDJWAoMn1CkPRpNqhl1jKpYY=";
+  cargoDeps = rustCrates.mkRegistry {
+    crateDeps = [
+      "bstr@1"
+      "fancy-regex@0.13"
+      "pyo3@0.26!:extension-module,macros"
+      "regex@1"
+      "rustc-hash@2"
+    ];
   };
 
   nativeBuildInputs = [
+    rustPlatform.cargoRegistryHook
     rustPlatform.cargoSetupHook
     setuptools-rust
     cargo

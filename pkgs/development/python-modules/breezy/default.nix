@@ -21,6 +21,7 @@
   testtools,
   installShellFiles,
   rustPlatform,
+  rustCrates,
   rustc,
   setuptools-gettext,
   setuptools-rust,
@@ -39,14 +40,17 @@ buildPythonPackage rec {
     hash = "sha256-S8YHFEWiSnkBFO75jMuEcvVZSnoV9SGCH/Ueodq2zow=";
   };
 
-  cargoDeps = rustPlatform.importCargoLock { lockFile = ./Cargo.lock; };
-
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
+  cargoDeps = rustCrates.mkRegistry {
+    crateDeps = [
+      "lazy_static@1"
+      "pyo3@0.28"
+      "regex@1"
+    ];
+  };
 
   nativeBuildInputs = [
     installShellFiles
+    rustPlatform.cargoRegistryHook
     rustPlatform.cargoSetupHook
     cargo
     rustc

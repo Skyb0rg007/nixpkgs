@@ -39,6 +39,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
         preConfigure = "";
 
         nativeBuildInputs = with rustPlatform; [
+          cargoRegistryHook
           cargoSetupHook
           maturinBuildHook
         ];

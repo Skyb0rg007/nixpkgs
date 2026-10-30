@@ -12,7 +12,10 @@ rustPlatform.buildRustPackage {
 
   src = builtins.filterSource (name: _: !(lib.hasSuffix ".nix" name)) ./.;
 
-  cargoLock.lockFile = ./Cargo.lock;
+  crateDeps = [
+    "anyhow@1"
+    "serde_json@1"
+  ];
 
   passthru.tests = { inherit (nixosTests) userborn-migration; };
 

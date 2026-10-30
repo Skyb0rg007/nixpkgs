@@ -3,6 +3,7 @@
   buildPythonPackage,
   fetchFromGitHub,
   rustPlatform,
+  rustCrates,
   libiconv,
   pytestCheckHook,
 }:
@@ -19,15 +20,21 @@ buildPythonPackage rec {
     hash = "sha256-JIFg+JIxRKXgWLAGgOyKZTe2gXa8wZW5pEubTBLqwmQ=";
   };
 
-  cargoDeps = rustPlatform.importCargoLock { lockFile = ./Cargo.lock; };
-
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
+  cargoDeps = rustCrates.mkRegistry {
+    crateDeps = [
+      "clap@4"
+      "pyo3@0.24:abi3-py38,extension-module"
+      "rand@0.8"
+      "rand_xorshift@0.3"
+    ];
+  };
 
   buildAndTestSubdir = "packages/pyo3";
 
-  nativeBuildInputs = [ rustPlatform.cargoSetupHook ];
+  nativeBuildInputs = [
+    rustPlatform.cargoRegistryHook
+    rustPlatform.cargoSetupHook
+  ];
 
   buildInputs = [ libiconv ];
 

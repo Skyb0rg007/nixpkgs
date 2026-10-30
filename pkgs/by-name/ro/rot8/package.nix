@@ -15,15 +15,15 @@ rustPlatform.buildRustPackage (finalAttrs: {
     hash = "sha256-9zjAi4yIpTqcJ338t0CVoOo0jlzrzRMfTH4ZRqBVAQg=";
   };
 
-  # Upstream dropped Cargo.lock from the repo, so it has to be
-  # generated manually with `cargo generate-lockfile`.
-  cargoDeps = rustPlatform.importCargoLock {
-    lockFile = ./Cargo.lock;
-  };
-
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
+  crateDeps = [
+    "clap@3"
+    "glob@0.3"
+    "regex@1"
+    "serde@1:derive"
+    "serde_json@1"
+    "wayland-client@0.31"
+    "wayland-protocols-wlr@0.2:client"
+  ];
 
   meta = {
     description = "Screen rotation daemon for X11 and wlroots";

@@ -1,5 +1,5 @@
 #!/usr/bin/env nix-shell
-#! nix-shell -p nix jq curl cargo rsync
+#! nix-shell -p nix jq curl cargo python3
 #! nix-shell -i bash
 
 set -eu
@@ -31,21 +31,6 @@ cat > pin.json <<EOF
 }
 EOF
 
-echo "Generating updated Cargo.lock" >&2
+echo "Updating crateDeps" >&2
 
-tmp="$(mktemp -d)"
-
-cleanup() {
-  echo "Removing $tmp" >&2
-  rm -rf "$tmp"
-}
-
-trap cleanup EXIT
-
-rsync -a --chmod=ugo=rwX "$(printf '%s' "$prefetch" | tail -n1)/" "$tmp"
-
-pushd "$tmp"
-cargo update
-popd
-
-cp "$tmp/Cargo.lock" ./Cargo.lock
+../../../../maintainers/scripts/rust-crates/rust-crates.py deps -A rure --write

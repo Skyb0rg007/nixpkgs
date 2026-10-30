@@ -14,13 +14,14 @@ rustPlatform.buildRustPackage (finalAttrs: {
     hash = "sha256-BEFdVspQU2exj6ndULCs0TfH7aIx/NvfUkTSL32bIPk=";
   };
 
-  postPatch = ''
-    cp -L ${./Cargo.lock} Cargo.lock
-  '';
-
-  cargoLock = {
-    lockFile = ./Cargo.lock;
-  };
+  crateDeps = [
+    "cbindgen@0.27"
+    "crc@3"
+    "criterion@0.5"
+    "lazy_static@1"
+    "proptest@1"
+    "rand@0.8"
+  ];
 
   postInstall = ''
     mv $out/bin/build_table $out/bin/pclmulqdq_build_table

@@ -6,6 +6,7 @@
 
   # build-system
   rustPlatform,
+  rustCrates,
 
   # native darwin dependencies
   libiconv,
@@ -19,6 +20,7 @@
   common-updater-scripts,
   gitMinimal,
   nix-update,
+  python,
   writeShellApplication,
 }:
 
@@ -36,22 +38,61 @@ buildPythonPackage rec {
 
   postPatch = ''
     cd crates/css-inline-python
-    ln -s ${./Cargo.lock} Cargo.lock
 
     # don't rebuild std
     rm .cargo/config.toml
   '';
 
-  cargoDeps = rustPlatform.fetchCargoVendor {
-    inherit pname version src;
-    postPatch = ''
-      cd crates/css-inline-python
-      ln -s ${./Cargo.lock} Cargo.lock
-    '';
-    hash = "sha256-FG0oe4YIKWCS5ER0IeSbtTQ7U758SfexHTn8MKp/ZZM=";
+  cargoDeps = rustCrates.mkRegistry {
+    crateDeps = [
+      "assert_cmd@2"
+      "async-trait@0.1"
+      "built@0.8:cargo-lock,chrono"
+      "cbindgen@0.29"
+      "codspeed-criterion-compat@5"
+      "criterion@0.8!"
+      "cssparser@0.38"
+      "dhat@0.3"
+      "ext-php-rs@0.16"
+      "futures-channel@0.3"
+      "futures-util@0.3!:alloc"
+      "getrandom@0.4:wasm_js"
+      "hashbrown@0.17!:inline-more"
+      "html5ever@0.40"
+      "jni@0.22"
+      "lexopt@0.3"
+      "libc@0.2"
+      "lru@0.18"
+      "magnus@0.9"
+      "memchr@2"
+      "mimalloc@0.1:local_dynamic_tls"
+      "napi-build@2"
+      "napi-derive@3"
+      "napi@3:async,napi4"
+      "pico-args@0.5"
+      "precomputed-hash@0.1"
+      "pyo3-built@0.6"
+      "pyo3@0.29:abi3-py310,extension-module"
+      "rayon@1"
+      "reqwest@0.13!:blocking,rustls-no-provider"
+      "rustc-hash@2"
+      "rustls@0.23!:ring,std,tls12"
+      "selectors@0.41"
+      "serde-wasm-bindgen@0.6"
+      "serde@1:derive"
+      "serde_json@1"
+      "smallvec@1"
+      "test-case@3"
+      "tokio@1:macros,rt"
+      "url@2"
+      "wasm-bindgen-futures@0.4"
+      "wasm-bindgen@0.2"
+      "webpki-roots@1"
+    ];
   };
 
   nativeBuildInputs = [
+    rustPlatform.cargoRegistryHook
     rustPlatform.cargoSetupHook
     rustPlatform.maturinBuildHook
   ];
@@ -84,6 +125,7 @@ buildPythonPackage rec {
       common-updater-scripts
       gitMinimal
       nix-update
+      python
     ];
     text = ''
       TAG="$(list-git-tags --url=https://github.com/Stranger6667/css-inline | \
@@ -92,20 +134,9 @@ buildPythonPackage rec {
         tail --lines 1)"
       VERSION="''${TAG//python-v/}"
       REPO_ROOT="$(git rev-parse --show-toplevel)"
-      PKG_DIR="$REPO_ROOT/pkgs/development/python-modules/css-inline"
-
-      (
-        cd "$(mktemp -d)"
-        git clone "${src.gitRepoUrl}" .
-        git checkout "$TAG"
-        pushd crates/css-inline-python
-        rm -rf .cargo # unstable build std
-        cargo generate-lockfile --manifest-path ./Cargo.toml
-        popd
-        cp Cargo.lock "$PKG_DIR/"
-      )
 
       nix-update --version="$VERSION" python3Packages.css-inline
+      "$REPO_ROOT/maintainers/scripts/rust-crates/rust-crates.py" deps -A python3Packages.css-inline --write
     '';
   });
 

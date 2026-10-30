@@ -18,13 +18,10 @@ let
     pname = "moveline-lib";
 
     # Upstream doesn't contain a cargo lock
-    cargoLock = {
-      lockFile = ./Cargo.lock;
-    };
-
-    postPatch = ''
-      ln -s ${./Cargo.lock} Cargo.lock
-    '';
+    crateDeps = [
+      "mlua@0.8:luajit,module,vendored"
+      "nvim-utils@0.1"
+    ];
 
     env.RUSTFLAGS = lib.optionalString stdenv.hostPlatform.isDarwin "-C link-arg=-undefined -C link-arg=dynamic_lookup";
   };

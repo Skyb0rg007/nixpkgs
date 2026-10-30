@@ -30,12 +30,9 @@ let
       hash = "sha256-skOM2dx+u7dYbWywaC8dtUuJuXzc4Mm6skBbMfaTwfY=";
     };
 
-    cargoLock.lockFile = ./libptrscan/Cargo.lock;
-
-    postPatch = ''
-      cp ${./libptrscan/Cargo.lock} Cargo.lock
-      chmod +w Cargo.lock
-    '';
+    crateDeps = [
+      "machx@0.4!"
+    ];
 
     cargoBuildFlags = [ "-p libptrscan" ];
 

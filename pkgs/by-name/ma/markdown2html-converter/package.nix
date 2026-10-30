@@ -15,11 +15,16 @@ rustPlatform.buildRustPackage (finalAttrs: {
     hash = "sha256-C35TCmcskhK3sHbkUp3kEaTA4P7Ls5Rn6ahUbzy7KXY=";
   };
 
-  cargoLock.lockFile = ./Cargo.lock;
-
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
+  crateDeps = [
+    "anyhow@1"
+    "clap@4:derive"
+    "comrak@0.19!"
+    "concat-with@0.2"
+    "html-escape@0.2"
+    "html-minifier@4"
+    "lazy-static-include@3"
+    "terminal_size@0.3"
+  ];
 
   meta = {
     changelog = "https://github.com/magiclen/markdown2html-converter/releases/tag/v${finalAttrs.version}";

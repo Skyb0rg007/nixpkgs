@@ -17,11 +17,14 @@ rustPlatform.buildRustPackage (finalAttrs: {
     hash = "sha256-/Zi7iQ2NSy0eGLyAQBp/PiKQEAp33OSW9MkXawQuLMA=";
   };
 
-  # Upstream does not provide a Cargo.lock file
-  cargoLock.lockFile = ./Cargo.lock;
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
+  crateDeps = [
+    "anyhow@1"
+    "convert_case@0.8"
+    "structopt@0.3"
+    "strum@0.27"
+    "strum_macros@0.27"
+    "witnext@0.10"
+  ];
 
   doInstallCheck = true;
   nativeInstallCheckInputs = [ versionCheckHook ];

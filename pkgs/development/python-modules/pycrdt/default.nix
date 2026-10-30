@@ -5,6 +5,7 @@
 
   # nativeBuildInputs
   rustPlatform,
+  rustCrates,
 
   # dependencies
   anyio,
@@ -16,6 +17,7 @@
   trio,
 
   nix-update-script,
+  _experimental-update-script-combinators,
 }:
 
 buildPythonPackage (finalAttrs: {
@@ -31,13 +33,18 @@ buildPythonPackage (finalAttrs: {
     hash = "sha256-tkxjRq0hBJeP3+0/QyTn1P92HJVx9aw9KmIrzIe3T9Y=";
   };
 
-  postPatch = ''
-    cp ${./Cargo.lock} Cargo.lock
-  '';
-
-  cargoDeps = rustPlatform.importCargoLock { lockFile = ./Cargo.lock; };
+  cargoDeps = rustCrates.mkRegistry {
+    crateDeps = [
+      "futures-task@0.3"
+      "pyo3@0.30"
+      "serde@1"
+      "serde_json@1"
+      "yrs@0.28:sync"
+    ];
+  };
 
   nativeBuildInputs = [
+    rustPlatform.cargoRegistryHook
     rustPlatform.cargoSetupHook
     rustPlatform.maturinBuildHook
   ];
@@ -58,7 +65,10 @@ buildPythonPackage (finalAttrs: {
     "-Wignore::pytest.PytestUnknownMarkWarning" # requires unpackaged pytest-mypy-testing
   ];
 
-  passthru.updateScript = nix-update-script { extraArgs = [ "--generate-lockfile" ]; };
+  passthru.updateScript = _experimental-update-script-combinators.sequence [
+    (nix-update-script { })
+    (rustCrates.updateScript { })
+  ];
 
   meta = {
     description = "CRDTs based on Yrs";

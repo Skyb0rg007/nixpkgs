@@ -18,13 +18,35 @@ rustPlatform.buildRustPackage (finalAttrs: {
     hash = "sha256-xJzglrNB5rqaRQTgRFIl8/AXjeDwFPykIE5LJwJ3cX4=";
   };
 
-  cargoLock = {
-    lockFile = ./Cargo.lock;
-  };
-
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
+  crateDeps = [
+    "ctrlc@3!:termination"
+    "flate2@1"
+    "futures@0.3"
+    "gethostname@1!"
+    "hex@0.4"
+    "itertools@0.14"
+    "log-panics@2:with-backtrace"
+    "log@0.4!"
+    "notify@6"
+    "regex@1!:std"
+    "reqwest@0.12!:json,rustls-tls,stream"
+    "rusqlite@0.32:bundled"
+    "serde_json@1!"
+    "serial_test@4"
+    "sha2@0.10:asm"
+    "sha3@0.10!"
+    "simplelog@0.12"
+    "tar@0.4"
+    "time@0.3!"
+    "tokio-test@0.4"
+    "tokio-util@0.7!:codec"
+    "tokio@1!:macros,rt,rt-multi-thread"
+    "uuid@1!:v4"
+    "walkdir@2"
+    "windows-service@0.7"
+    "yaml-rust@0.4"
+    "zip@4"
+  ];
 
   nativeBuildInputs = [
     pkg-config

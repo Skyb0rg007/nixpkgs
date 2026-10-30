@@ -6,6 +6,7 @@
   cmake,
   pkg-config,
   rustPlatform,
+  rustCrates,
   rustc,
   fcitx5,
   ibus,
@@ -35,6 +36,7 @@ stdenv.mkDerivation (finalAttrs: {
     pkg-config
     cargo
     rustc
+    rustPlatform.cargoRegistryHook
     rustPlatform.cargoSetupHook
     libsForQt5.wrapQtAppsHook
   ];
@@ -51,9 +53,19 @@ stdenv.mkDerivation (finalAttrs: {
       zstd
     ];
 
-  cargoDeps = rustPlatform.fetchCargoVendor {
-    inherit (finalAttrs) src cargoRoot postPatch;
-    hash = "sha256-UrS12fcXIIT3xhl/nyegwROBMCIepi6n07CS5CEA2BY=";
+  cargoDeps = rustCrates.mkRegistry {
+    crateDeps = [
+      "ahash@0.8:serde"
+      "edit-distance@2"
+      "emojicon@0.5:custom"
+      "okkhor@0.7"
+      "poriborton@0.2"
+      "regex@1"
+      "rustversion@1"
+      "serde_json@1"
+      "stringplus@0.1"
+      "upodesh@0.2"
+    ];
   };
 
   cmakeFlags =
@@ -69,9 +81,6 @@ stdenv.mkDerivation (finalAttrs: {
   ];
 
   cargoRoot = "src/engine/riti";
-  postPatch = ''
-    cp ${./Cargo.lock} ${finalAttrs.cargoRoot}/Cargo.lock
-  '';
 
   meta = {
     isIbusEngine = withIbusSupport;

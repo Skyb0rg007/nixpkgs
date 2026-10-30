@@ -22,12 +22,20 @@ rustPlatform.buildRustPackage (finalAttrs: {
     hash = "sha256-aGBvvjGKZ5biruwmJ0ITakqPhTWs9hspRIE9QirqstA=";
   };
 
-  # RFE: Include Cargo.lock in sources
-  # https://github.com/systemd/zram-generator/issues/65
-  cargoLock.lockFile = ./Cargo.lock;
+  crateDeps = [
+    "anyhow@1"
+    "clap@4!:cargo,error-context,help,std"
+    "ctor@0.2"
+    "fasteval@0.2!"
+    "fs_extra@1"
+    "liboverdrop@0.1"
+    "log@0.4:std"
+    "nix@0.23"
+    "rust-ini@0.18"
+    "tempfile@3"
+  ];
 
   postPatch = ''
-    cp ${./Cargo.lock} Cargo.lock
     substituteInPlace Makefile \
       --replace-fail 'target/$(BUILDTYPE)' 'target/${stdenv.hostPlatform.rust.rustcTargetSpec}/$(BUILDTYPE)'
     substituteInPlace src/generator.rs \

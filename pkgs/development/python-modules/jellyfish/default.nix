@@ -6,6 +6,7 @@
   pytestCheckHook,
   rustc,
   rustPlatform,
+  rustCrates,
   unicodecsv,
 }:
 
@@ -21,16 +22,21 @@ buildPythonPackage rec {
     hash = "sha256-jKz7FYzV66TUkJZfWDTy8GXmTZ6SU5jEdtkjYLDfS/8=";
   };
 
-  cargoDeps = rustPlatform.importCargoLock {
-    lockFile = ./Cargo.lock;
+  cargoDeps = rustCrates.mkRegistry {
+    crateDeps = [
+      "ahash@0.8"
+      "csv@1"
+      "num-traits@0.2"
+      "pyo3@0.26:generate-import-lib"
+      "smallvec@1"
+      "unicode-normalization@0.1"
+      "unicode-segmentation@1"
+    ];
   };
-
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
 
   build-system = [
     cargo
+    rustPlatform.cargoRegistryHook
     rustPlatform.cargoSetupHook
     rustPlatform.maturinBuildHook
     rustc

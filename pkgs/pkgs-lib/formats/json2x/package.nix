@@ -10,10 +10,13 @@ rustPlatform.buildRustPackage {
 
   src = lib.sourceByRegex ./. [
     "^src(/.*)?$"
-    ''^Cargo\.(lock|toml)$''
+    ''^Cargo\.toml$''
   ];
 
-  cargoLock = {
-    lockFile = ./Cargo.lock;
-  };
+  crateDeps = [
+    "anyhow@1"
+    "argh@0.1"
+    "serde_json@1"
+    "toml@1!:display,serde,std"
+  ];
 }

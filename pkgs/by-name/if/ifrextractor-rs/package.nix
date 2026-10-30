@@ -15,13 +15,9 @@ rustPlatform.buildRustPackage (finalAttrs: {
     hash = "sha256-zpoOThjkL2Hu/ytxdqWcr2GXzN4Cm8hph7PJhSF5BlU=";
   };
 
-  cargoLock = {
-    lockFile = ./Cargo.lock;
-  };
-
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
+  crateDeps = [
+    "nom@4"
+  ];
 
   meta = {
     description = "Rust utility to extract UEFI IFR data into human-readable text";

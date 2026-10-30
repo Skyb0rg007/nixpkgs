@@ -3,6 +3,7 @@
   buildPythonPackage,
   fetchFromGitHub,
   rustPlatform,
+  rustCrates,
 
   # build-system
   cargo,
@@ -21,14 +22,17 @@ buildPythonPackage rec {
     hash = "sha256-WpTbS8XoOKhyyt1/YGagulopFKiqNI0ETkhjpiX0TL8=";
   };
 
-  cargoDeps = rustPlatform.importCargoLock { lockFile = ./Cargo.lock; };
-
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
+  cargoDeps = rustCrates.mkRegistry {
+    crateDeps = [
+      "pyo3@0.18:extension-module"
+      "rayon@1"
+      "rust-stemmers@1"
+    ];
+  };
 
   build-system = [
     cargo
+    rustPlatform.cargoRegistryHook
     rustPlatform.cargoSetupHook
     rustPlatform.maturinBuildHook
     rustc

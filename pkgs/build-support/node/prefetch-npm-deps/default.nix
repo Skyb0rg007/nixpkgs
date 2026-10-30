@@ -30,7 +30,24 @@
         name' != "default.nix" && name' != "target";
     };
 
-    cargoLock.lockFile = ./Cargo.lock;
+    crateDeps = [
+      "anyhow@1"
+      "backoff@0.4"
+      "data-encoding@2"
+      "digest@0.10"
+      "env_logger@0.11"
+      "isahc@1!"
+      "log@0.4"
+      "nix-nar@0.3"
+      "rayon@1"
+      "serde@1:derive"
+      "serde_json@1"
+      "sha1@0.10"
+      "sha2@0.10"
+      "tempfile@3"
+      "url@2:serde"
+      "walkdir@2"
+    ];
 
     nativeBuildInputs = [
       makeWrapper

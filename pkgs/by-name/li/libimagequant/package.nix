@@ -24,14 +24,17 @@ rustPlatform.buildRustPackage (finalAttrs: {
     hash = "sha256-A7idjAAJ+syqIahyU+LPZBF+MLxVDymY+M3HM7d/qk0=";
   };
 
-  cargoLock = {
-    # created it by running `cargo update` in the source tree.
-    lockFile = ./Cargo.lock;
-  };
-
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
+  crateDeps = [
+    "arrayvec@0.7"
+    "bitflags@2"
+    "cc@1"
+    "libc@0.2"
+    "lodepng@3"
+    "once_cell@1"
+    "rayon@1"
+    "rgb@0.8!:bytemuck"
+    "thread_local@1"
+  ];
 
   nativeBuildInputs = [ cargo-c ];
 

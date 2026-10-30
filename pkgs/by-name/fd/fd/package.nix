@@ -20,7 +20,32 @@ rustPlatform.buildRustPackage (finalAttrs: {
     hash = "sha256-X3yrZUBieMO5bauUu2mskfvicLRdQcjbXouFTpz+0eQ=";
   };
 
-  cargoHash = "sha256-5ijtWSsHn7ii8+1njwyvyj387FQkMQALKbixkr/nSkk=";
+  crateDeps = [
+    "aho-corasick@1"
+    "anyhow@1"
+    "argmax@0.4"
+    "clap@4:cargo,color,derive,suggestions,wrap_help"
+    "clap_complete@4"
+    "crossbeam-channel@0.5"
+    "ctrlc@3"
+    "diff@0.1"
+    "etcetera@0.11"
+    "faccess@0.2"
+    "filetime@0.2"
+    "globset@0.4"
+    "ignore@0.4"
+    "jiff@0.2"
+    "libc@0.2"
+    "lscolors@0.21!:nu-ansi-term"
+    "nix@0.31!:hostname,signal,user"
+    "normpath@1"
+    "nu-ansi-term@0.50"
+    "regex-syntax@0.8"
+    "regex@1"
+    "tempfile@3"
+    "test-case@3"
+    "tikv-jemallocator@0.7"
+  ];
 
   nativeBuildInputs = [ installShellFiles ];
 

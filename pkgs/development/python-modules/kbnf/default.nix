@@ -3,6 +3,7 @@
   buildPythonPackage,
   fetchFromGitHub,
   rustPlatform,
+  rustCrates,
   numpy,
   triton,
   torch,
@@ -21,15 +22,40 @@ buildPythonPackage rec {
   };
 
   # Manually unarchived from tarball from pypi
-  postPatch = ''
-    cp ${./Cargo.lock} Cargo.lock
-  '';
 
-  cargoDeps = rustPlatform.importCargoLock {
-    lockFile = ./Cargo.lock;
+  cargoDeps = rustCrates.mkRegistry {
+    crateDeps = [
+      "ahash@0.8:serde"
+      "criterion@0.5"
+      "displaydoc@0.2"
+      "fixedbitset-stack@0.5"
+      "general-sam@1"
+      "getrandom@0.2:js"
+      "insta@1"
+      "jaggedarray@0.2"
+      "js-sys@0.3"
+      "kbnf-regex-automata@0.4"
+      "kbnf-syntax@0.5"
+      "log@0.4"
+      "mimalloc@0.1"
+      "nom@7"
+      "nonmax@0.5"
+      "num@0.4"
+      "pyo3-log@0.12"
+      "pyo3@0.24:abi3-py37,extension-module,multiple-pymethods"
+      "serde-wasm-bindgen@0.6"
+      "serde@1"
+      "serde_json@1"
+      "string-interner@0.18"
+      "strum@0.26:derive"
+      "thiserror@2"
+      "tinyvec@1"
+      "wasm-bindgen@0.2"
+    ];
   };
 
   build-system = [
+    rustPlatform.cargoRegistryHook
     rustPlatform.cargoSetupHook
     rustPlatform.maturinBuildHook
   ];

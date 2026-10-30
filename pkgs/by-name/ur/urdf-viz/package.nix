@@ -23,18 +23,38 @@ rustPlatform.buildRustPackage (finalAttrs: {
     hash = "sha256-zn/theIULmRePz2/uEsZpeVBhOtqJ0K2xXGb/t+agK4=";
   };
 
-  # Fetch all cargo dependencies based on lockfile generated for version
-  # Note: This is only required as the lockfile is not present in the github repository
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
-  cargoLock =
-    let
-      fixupLockFile = path: (builtins.readFile path);
-    in
-    {
-      lockFileContents = fixupLockFile ./Cargo.lock;
-    };
+  crateDeps = [
+    "assimp-sys@0.3"
+    "assimp@0.3"
+    "axum@0.7"
+    "base64@0.22"
+    "console_error_panic_hook@0.1"
+    "crossbeam-queue@0.3"
+    "ctrlc@3:termination"
+    "getrandom@0.2:js"
+    "js-sys@0.3"
+    "k@0.32"
+    "kiss3d@0.35"
+    "mesh-loader@0.1"
+    "rand@0.8"
+    "serde@1:derive"
+    "serde_json@1"
+    "serde_qs@0.13"
+    "structopt@0.3"
+    "tempfile@3"
+    "thiserror@2"
+    "tokio@1:full"
+    "tower-http@0.6:trace"
+    "tracing-subscriber@0.3"
+    "tracing-wasm@0.2"
+    "tracing@0.1"
+    "urdf-rs@0.9"
+    "ureq@2"
+    "url@2"
+    "wasm-bindgen-futures@0.4"
+    "wasm-bindgen@0.2"
+    "web-sys@0.3:Blob,File,FileReader,Location,Response,Url,WebGlRenderingContext,Window"
+  ];
 
   # Add all buildtime dependencies
   nativeBuildInputs = lib.optionals stdenv.hostPlatform.isLinux [ autoPatchelfHook ];

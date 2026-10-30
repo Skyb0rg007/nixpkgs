@@ -17,11 +17,28 @@ rustPlatform.buildRustPackage (finalAttrs: {
     sha256 = "sha256-PIeF9VuyJOIs1x02YETKIP0+nCG3RZXLMJdFNlgAFzo=";
   };
 
-  cargoLock.lockFile = ./Cargo.lock;
-
-  postPatch = ''
-    cp ${./Cargo.lock} Cargo.lock
-  '';
+  crateDeps = [
+    "cc@1:parallel"
+    "clap@4!:error-context,help,std,suggestions,usage"
+    "codespan-reporting@0.13"
+    "cxx-build@1"
+    "cxx@1"
+    "foldhash@0.2!:std"
+    "indexmap@2"
+    "indoc@2"
+    "link-cplusplus@1"
+    "pkg-config@0.3"
+    "prettyplease@0.2"
+    "proc-macro2@1:span-locations"
+    "quote@1"
+    "rustversion@1"
+    "scratch@1"
+    "serde@1:derive"
+    "syn@2:clone-impls,full,parsing,printing"
+    "target-triple@1"
+    "tempfile@3"
+    "trybuild@1:diff"
+  ];
 
   cargoBuildFlags = [
     "--workspace"

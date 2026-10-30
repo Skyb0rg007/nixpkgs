@@ -9,6 +9,7 @@
   pytestCheckHook,
   rustc,
   rustPlatform,
+  rustCrates,
 }:
 
 buildPythonPackage rec {
@@ -23,14 +24,18 @@ buildPythonPackage rec {
     hash = "sha256-OXlfycJB1IrW2Zq0xPDGjjwCdRTWtX/ixPGWcd+YjAg=";
   };
 
-  cargoDeps = rustPlatform.importCargoLock { lockFile = ./Cargo.lock; };
-
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
+  cargoDeps = rustCrates.mkRegistry {
+    crateDeps = [
+      "hashbrown@0.12"
+      "lazy_static@1"
+      "pyo3@0.17:abi3-py37,extension-module"
+      "rstest@0.15"
+    ];
+  };
 
   nativeBuildInputs = [
     cargo
+    rustPlatform.cargoRegistryHook
     rustPlatform.cargoSetupHook
     rustPlatform.maturinBuildHook
     rustc

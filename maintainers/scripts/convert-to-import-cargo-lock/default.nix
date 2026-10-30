@@ -13,5 +13,10 @@ rustPlatform.buildRustPackage {
       name' != "default.nix" && name' != "target";
   };
 
-  cargoLock.lockFile = ./Cargo.lock;
+  crateDeps = [
+    "anyhow@1"
+    "basic-toml@0.1"
+    "serde@1:derive"
+    "serde_json@1"
+  ];
 }

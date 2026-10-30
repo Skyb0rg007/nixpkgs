@@ -15,13 +15,20 @@ rustPlatform.buildRustPackage (finalAttrs: {
     hash = "sha256-A575QnbituecxIX0mm7bOMC+V8jeWB4j3A2iWgDKBts=";
   };
 
-  cargoLock = {
-    lockFile = ./Cargo.lock;
-  };
-
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
+  crateDeps = [
+    "cfg-if@0.1"
+    "clap@2"
+    "console_error_panic_hook@0.1"
+    "console_log@0.2:color"
+    "fastrand@2:js"
+    "image@0.23"
+    "pyo3@0.19"
+    "serde@1:derive"
+    "serde_json@1"
+    "visioncortex@0.8"
+    "wasm-bindgen@0.2:serde-serialize"
+    "web-sys@0.3:CanvasRenderingContext2d,Document,HtmlCanvasElement,HtmlElement,ImageData,Window,console"
+  ];
 
   meta = {
     description = "Raster to Vector Graphics Converter";

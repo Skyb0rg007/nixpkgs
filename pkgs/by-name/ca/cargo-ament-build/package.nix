@@ -17,11 +17,11 @@ rustPlatform.buildRustPackage (finalAttrs: {
     hash = "sha256-5D0eB3GCQLgVYuYkHMTkboruiYSAaWy3qZjF/hVpRP0=";
   };
 
-  cargoLock.lockFile = ./Cargo.lock;
-
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
+  crateDeps = [
+    "anyhow@1"
+    "cargo-manifest@0.2"
+    "pico-args@0.4"
+  ];
 
   nativeBuildInputs = [ pkg-config ];
 

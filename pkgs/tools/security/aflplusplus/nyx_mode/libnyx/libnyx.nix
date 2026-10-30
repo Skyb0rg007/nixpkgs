@@ -13,12 +13,27 @@ rustPlatform.buildRustPackage {
   src = aflplusplus.src;
   postUnpack = ''
     sourceRoot="$sourceRoot/nyx_mode/libnyx/libnyx"
-    cp ${./Cargo.lock} "$sourceRoot/Cargo.lock"
   '';
 
-  cargoLock = {
-    lockFile = ./Cargo.lock;
-  };
+  crateDeps = [
+    "byteorder@1"
+    "cbindgen@0.28"
+    "colored@2"
+    "derivative@2"
+    "fs4@0.5"
+    "glob@0.3"
+    "libc@0.2"
+    "nix@0.26"
+    "quick-error@2"
+    "rand@0.7"
+    "ron@0.6"
+    "serde@1"
+    "serde_derive@1"
+    "snafu@0.6"
+    "subprocess@0.2"
+    "time@0.2"
+    "timeout-readwrite@0.3"
+  ];
 
   doCheck = false;
 

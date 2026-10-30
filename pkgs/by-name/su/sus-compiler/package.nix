@@ -5,6 +5,8 @@
   fetchFromGitHub,
   versionCheckHook,
   nix-update-script,
+  _experimental-update-script-combinators,
+  rustCrates,
 }:
 
 rustPlatform.buildRustPackage (finalAttrs: {
@@ -39,16 +41,40 @@ rustPlatform.buildRustPackage (finalAttrs: {
     '';
   };
 
-  # no lockfile upstream
-  cargoLock.lockFile = ./Cargo.lock;
+  crateDeps = [
+    "ariadne@0.6"
+    "cc@1"
+    "chrono@0.4"
+    "circular-buffer@1"
+    "clap@4:derive,wrap_help"
+    "colored@3"
+    "crossbeam-channel@0.5"
+    "dirs@6"
+    "dtoa@1"
+    "env_logger@0.11!:auto-color"
+    "ibig@0.3!:std"
+    "log@0.4"
+    "lsp-server@0.7"
+    "lsp-types@0.97"
+    "ordered-float@5"
+    "ouroboros@0.18"
+    "pulldown-cmark@0.13!:html"
+    "quote@1"
+    "rand@0.10"
+    "regex@1"
+    "replace_with@0.1"
+    "same-file@1"
+    "serde@1"
+    "serde_json@1"
+    "syn@2"
+    "tree-sitter@0.26"
+    "typed-arena@2"
+    "unescape@0.1"
+  ];
 
   preBuild = ''
     export INSTALL_SUS_HOME="$out/share/sus-compiler";
     mkdir -p "$INSTALL_SUS_HOME"
-  '';
-
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
   '';
 
   # Do the install version check only on stable versions of this compiler, when the build platform
@@ -64,7 +90,10 @@ rustPlatform.buildRustPackage (finalAttrs: {
   nativeInstallCheckInputs = [ versionCheckHook ];
   versionCheckProgram = "${placeholder "out"}/bin/sus_compiler";
 
-  passthru.updateScript = nix-update-script { extraArgs = [ "--generate-lockfile" ]; };
+  passthru.updateScript = _experimental-update-script-combinators.sequence [
+    (nix-update-script { })
+    (rustCrates.updateScript { })
+  ];
 
   meta = {
     description = "New Hardware Design Language that keeps you in the driver's seat";

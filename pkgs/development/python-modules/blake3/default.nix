@@ -7,7 +7,9 @@
   numpy,
   pytestCheckHook,
   rustPlatform,
+  rustCrates,
   nix-update-script,
+  _experimental-update-script-combinators,
 }:
 
 buildPythonPackage rec {
@@ -22,12 +24,13 @@ buildPythonPackage rec {
     hash = "sha256-gwPGSah9qzApDwsBNABRLPZGrpaO3WArHoK6Jj6WJzo=";
   };
 
-  postPatch = ''
-    ln -s '${./Cargo.lock}' Cargo.lock
-  '';
-
-  cargoDeps = rustPlatform.importCargoLock {
-    lockFile = ./Cargo.lock;
+  cargoDeps = rustCrates.mkRegistry {
+    crateDeps = [
+      "blake3@1:mmap,neon,rayon"
+      "hex@0.4"
+      "pyo3@0.26:extension-module"
+      "rayon@1"
+    ];
   };
 
   buildInputs = lib.optionals stdenv.hostPlatform.isDarwin [
@@ -35,6 +38,7 @@ buildPythonPackage rec {
   ];
 
   nativeBuildInputs = with rustPlatform; [
+    cargoRegistryHook
     cargoSetupHook
     maturinBuildHook
   ];
@@ -46,11 +50,10 @@ buildPythonPackage rec {
 
   pythonImportsCheck = [ "blake3" ];
 
-  passthru.updateScript = nix-update-script {
-    extraArgs = [
-      "--generate-lockfile"
-    ];
-  };
+  passthru.updateScript = _experimental-update-script-combinators.sequence [
+    (nix-update-script { })
+    (rustCrates.updateScript { })
+  ];
 
   meta = {
     description = "Python bindings for the BLAKE3 cryptographic hash function";

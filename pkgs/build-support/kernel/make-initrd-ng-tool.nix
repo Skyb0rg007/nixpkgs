@@ -8,7 +8,13 @@ rustPlatform.buildRustPackage {
   version = "0.1.0";
 
   src = ./make-initrd-ng;
-  cargoLock.lockFile = ./make-initrd-ng/Cargo.lock;
+  crateDeps = [
+    "eyre@0.6"
+    "goblin@0.5"
+    "libc@0.2"
+    "serde@1:derive"
+    "serde_json@1"
+  ];
 
   passthru.updateScript = ./make-initrd-ng/update.sh;
 

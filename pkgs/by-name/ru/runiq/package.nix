@@ -15,11 +15,19 @@ rustPlatform.buildRustPackage {
     hash = "sha256-DWP0kbTjXlyUI/+bHgom9/XJ2XW/BJEU4xvIisPVug0=";
   };
 
-  cargoLock.lockFile = ./Cargo.lock;
-
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
+  crateDeps = [
+    "bytelines@2!"
+    "bytesize@1"
+    "clap@4:derive"
+    "cli-table@0.4"
+    "format_num@0.1"
+    "growable-bloom-filter@2"
+    "identity-hash@0.1"
+    "jen@1"
+    "strum@0.25"
+    "strum_macros@0.25"
+    "xxhash-rust@0.8:xxh64"
+  ];
 
   meta = {
     description = "Efficient way to filter duplicate lines from input, à la uniq";

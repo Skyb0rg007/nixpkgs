@@ -16,19 +16,16 @@ rustPlatform.buildRustPackage (finalAttrs: {
     hash = "sha256-Fu9Lvg2QRMQSBWXLZMIRBUoX2aJB4HirfnMe2v9x6Yc=";
   };
 
-  cargoLock = {
-    # generated using `cargo generate-lockfile` since repo is missing lockfile
-    lockFile = ./Cargo.lock;
-  };
+  crateDeps = [
+    "cc@1"
+    "libfuzzer-sys@0.4"
+    "rustc-std-workspace-core@1"
+  ];
 
   cargoBuildFlags = [
     "-p"
     "rustc-demangle-capi"
   ];
-
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
 
   postInstall = ''
     mkdir -p $out/lib

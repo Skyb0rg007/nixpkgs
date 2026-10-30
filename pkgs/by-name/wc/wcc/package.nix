@@ -2,6 +2,7 @@
   lib,
   stdenv,
   rustPlatform,
+  rustCrates,
   fetchFromGitHub,
   fetchpatch2,
   cargo,
@@ -25,10 +26,16 @@ stdenv.mkDerivation (finalAttrs: {
     fetchSubmodules = true;
   };
 
-  cargoDeps = rustPlatform.importCargoLock { lockFile = ./Cargo.lock; };
+  cargoRoot = "src/wsh/librustdemangle";
+  cargoDeps = rustCrates.mkRegistry {
+    crateDeps = [
+      "rustc-demangle@0.1"
+    ];
+  };
 
   nativeBuildInputs = [
     cargo
+    rustPlatform.cargoRegistryHook
     rustPlatform.cargoSetupHook
   ];
 
@@ -54,7 +61,6 @@ stdenv.mkDerivation (finalAttrs: {
   ];
 
   postPatch = ''
-    cp ${./Cargo.lock} Cargo.lock
     sed -i src/wsh/include/libwitch/wsh.h src/wsh/scripts/INDEX \
       -e "s#/usr/share/wcc#$out/share/wcc#"
 

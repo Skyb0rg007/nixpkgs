@@ -10,6 +10,7 @@
   rustc,
   cargo,
   rustPlatform,
+  rustCrates,
   ensureNewerSourcesForZipFilesHook,
 
   pcre2,
@@ -45,6 +46,7 @@ stdenv.mkDerivation (finalAttrs: {
     pkg-config
     rustc
     cargo
+    rustPlatform.cargoRegistryHook
     rustPlatform.cargoSetupHook
     ensureNewerSourcesForZipFilesHook
   ];
@@ -80,8 +82,28 @@ stdenv.mkDerivation (finalAttrs: {
 
   cargoRoot = "watchman/cli";
 
-  cargoDeps = rustPlatform.importCargoLock {
-    lockFile = ./Cargo.lock;
+  cargoDeps = rustCrates.mkRegistry {
+    crateDeps = [
+      "ahash@0.8:runtime-rng"
+      "anyhow@1"
+      "byteorder@1"
+      "bytes@1:serde"
+      "clap@4:derive,env,string,unicode,wrap_help"
+      "duct@0.13"
+      "futures@0.3:async-await,compat"
+      "jwalk@0.8"
+      "maplit@1"
+      "nix@0.30:dir,event,hostname,inotify,ioctl,mman,mount,net,poll,ptrace,reboot,resource,sched,signal,term,time,user,zerocopy"
+      "serde@1:derive,rc"
+      "serde_bytes@0.11"
+      "serde_json@1:alloc,float_roundtrip,raw_value,unbounded_depth"
+      "sysinfo@0.35"
+      "tabular@0.2"
+      "thiserror@2"
+      "tokio-util@0.7:full"
+      "tokio@1:full,test-util,tracing"
+      "winapi@0.3:fileapi,handleapi,winbase,winuser"
+    ];
   };
 
   doCheck = true;
@@ -96,7 +118,6 @@ stdenv.mkDerivation (finalAttrs: {
   postPatch = ''
     patchShebangs .
 
-    cp ${./Cargo.lock} ${finalAttrs.cargoRoot}/Cargo.lock
 
     # The build system looks for `/usr/bin/python3`. It falls back
     # gracefully if it’s not found, but let’s dodge the potential

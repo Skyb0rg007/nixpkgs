@@ -18,9 +18,23 @@ rustPlatform.buildRustPackage {
     hash = "sha256-cMSZDSN2qnTeKL3ZcNVRtS45Xa1kEcps9WpWuWruX/0=";
   };
 
-  cargoLock = {
-    lockFile = ./Cargo.lock;
-  };
+  crateDeps = [
+    "anyhow@1"
+    "check-latest@1"
+    "chrono@0.4"
+    "crossterm@0.28"
+    "directories@5"
+    "fuzzy-matcher@0.3"
+    "hostname@0.4"
+    "itertools@0.14"
+    "ratatui@0.29"
+    "reqwest@0.12!:blocking,json,rustls-tls"
+    "rpassword@7"
+    "serde@1:derive"
+    "serde_json@1!"
+    "textwrap@0.16"
+    "toml@0.8!:display,parse"
+  ];
 
   nativeBuildInputs = [
     pkg-config
@@ -31,10 +45,6 @@ rustPlatform.buildRustPackage {
     openssl
     mpv
   ];
-
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
 
   postInstall = ''
     wrapProgram $out/bin/jellytui \

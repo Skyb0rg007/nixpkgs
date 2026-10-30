@@ -15,6 +15,7 @@
   replaceVars,
   rustc,
   rustPlatform,
+  rustCrates,
   setuptools,
   setuptools-rust,
   setuptools-scm,
@@ -38,10 +39,6 @@ buildPythonPackage (finalAttrs: {
     })
   ];
 
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
-
   build-system = [
     setuptools
     setuptools-rust
@@ -51,11 +48,15 @@ buildPythonPackage (finalAttrs: {
   nativeBuildInputs = [
     cargo
     rustc
+    rustPlatform.cargoRegistryHook
     rustPlatform.cargoSetupHook
   ];
 
-  cargoDeps = rustPlatform.importCargoLock {
-    lockFile = ./Cargo.lock;
+  cargoDeps = rustCrates.mkRegistry {
+    crateDeps = [
+      "jid@0.12"
+      "pyo3@0.29:extension-module"
+    ];
   };
 
   dependencies = [

@@ -21,9 +21,18 @@ rustPlatform.buildRustPackage (finalAttrs: {
     ".lock"
   ];
 
-  cargoLock = {
-    lockFile = ./Cargo.lock;
-  };
+  crateDeps = [
+    "anyhow@1"
+    "bootspec@2"
+    "env_logger@0.11!"
+    "indoc@2"
+    "log@0.4"
+    "pathrs@0.2"
+    "serde@1:derive"
+    "serde_json@1"
+    "tempfile@3"
+    "xattr@1"
+  ];
 
   stripAllList = [ "bin" ];
 

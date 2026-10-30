@@ -14,7 +14,18 @@ rustPlatform.buildRustPackage {
 
   src = builtins.filterSource (name: _: !(lib.hasSuffix ".nix" name)) ./.;
 
-  cargoLock.lockFile = ./Cargo.lock;
+  crateDeps = [
+    "anyhow@1"
+    "dbus-codegen@0.12"
+    "dbus@0.9"
+    "glob@0.3"
+    "libsystemd@0.7"
+    "log@0.4"
+    "nix@0.31:fs,signal"
+    "regex@1"
+    "rust-ini@0.21:inline-comment"
+    "syslog@7"
+  ];
 
   nativeBuildInputs = [ pkg-config ];
   buildInputs = [ dbus ];

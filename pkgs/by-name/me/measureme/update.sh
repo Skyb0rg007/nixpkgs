@@ -1,5 +1,5 @@
 #!/usr/bin/env nix-shell
-#! nix-shell -i bash -p nix jq gnused curl nix-prefetch-git cargo
+#! nix-shell -i bash -p nix jq gnused curl nix-prefetch-git cargo python3
 
 set -eu -o pipefail
 
@@ -17,15 +17,8 @@ fi
 echo "Fetching source hash"
 hash="$(nix-prefetch-git https://github.com/rust-lang/measureme.git --quiet --rev "refs/tags/$version" | jq -r '.hash')"
 
-tmp=$(mktemp -d)
-trap "rm -rf $tmp" EXIT
-
-git clone --depth 1 --branch "$version" https://github.com/rust-lang/measureme.git "$tmp"
-pushd "$tmp"
-echo "Generating Cargo.lock"
-cargo update
-cp "Cargo.lock" "$package_dir/Cargo.lock"
-popd
-
 sed -i "s#hash = \".*\";#hash = \"$hash\";#g" "$package_dir/package.nix"
 sed -i "s#version = \".*\";#version = \"$version\";#g" "$package_dir/package.nix"
+
+echo "Updating crateDeps"
+"$package_dir/../../../../maintainers/scripts/rust-crates/rust-crates.py" deps -A measureme --write

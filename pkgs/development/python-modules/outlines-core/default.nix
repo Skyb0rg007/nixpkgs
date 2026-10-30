@@ -7,6 +7,7 @@
   cargo,
   pkg-config,
   rustPlatform,
+  rustCrates,
   rustc,
 
   # buildInputs
@@ -44,8 +45,21 @@ buildPythonPackage (finalAttrs: {
     hash = "sha256-XmXD2tWG2277bC318Bn9RqeEE7j9VdauvWnBmFS8Lsk=";
   };
 
-  cargoDeps = rustPlatform.importCargoLock {
-    lockFile = ./Cargo.lock;
+  cargoDeps = rustCrates.mkRegistry {
+    crateDeps = [
+      "bincode@2"
+      "hf-hub@0.4!:rustls-tls,ureq"
+      "once_cell@1"
+      "pyo3@0.27:extension-module,generate-import-lib"
+      "regex-automata@0.4"
+      "regex@1"
+      "rustc-hash@2"
+      "serde-pyobject@0.8"
+      "serde@1:derive"
+      "serde_json@1:preserve_order"
+      "thiserror@2"
+      "tokenizers@0.22!:http,onig,rustls-tls"
+    ];
   };
 
   postPatch = ''
@@ -54,12 +68,12 @@ buildPythonPackage (finalAttrs: {
         'version = "0.0.0"' \
         'version = "${finalAttrs.version}"'
 
-    cp --no-preserve=mode ${./Cargo.lock} Cargo.lock
   '';
 
   nativeBuildInputs = [
     cargo
     pkg-config
+    rustPlatform.cargoRegistryHook
     rustPlatform.cargoSetupHook
     rustPlatform.maturinBuildHook
     rustc

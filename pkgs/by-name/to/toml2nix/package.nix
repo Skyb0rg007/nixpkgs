@@ -14,11 +14,9 @@ rustPlatform.buildRustPackage (finalAttrs: {
     hash = "sha256-YhluLS4tFMibFrDzgIvNtfjM5dAqJQvygeZocKn3+Jg=";
   };
 
-  cargoLock.lockFile = ./Cargo.lock;
-
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
+  crateDeps = [
+    "toml@0.4"
+  ];
 
   passthru.updateScript = nix-update-script { };
   meta = {

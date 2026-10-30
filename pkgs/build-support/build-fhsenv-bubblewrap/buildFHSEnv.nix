@@ -212,7 +212,13 @@ let
   rootfs-builder = pkgs.buildPackages.rustPlatform.buildRustPackage {
     name = "fhs-rootfs-bulder";
     src = ./rootfs-builder;
-    cargoLock.lockFile = ./rootfs-builder/Cargo.lock;
+    crateDeps = [
+      "anyhow@1"
+      "goblin@0.10"
+      "serde@1:derive"
+      "serde_json@1"
+      "walkdir@2"
+    ];
     doCheck = false;
   };
 

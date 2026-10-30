@@ -19,11 +19,18 @@ rustPlatform.buildRustPackage (finalAttrs: {
     hash = "sha256-ecd+r0JWZtP/rxt4Y3Cj2TkygXIMy5KZhZpXBwJNPx4=";
   };
 
-  cargoLock.lockFile = ./Cargo.lock;
-
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
+  crateDeps = [
+    "anyhow@1"
+    "bitvec@1"
+    "bitvec_helpers@3!:bitstream-io"
+    "crc@3"
+    "criterion@0.5"
+    "libc@0.2"
+    "roxmltree@0.20"
+    "serde@1:derive"
+    "serde_json@1:preserve_order"
+    "tinyvec@1:rustc_1_55,serde"
+  ];
 
   nativeBuildInputs = [ cargo-c ];
 

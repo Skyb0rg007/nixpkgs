@@ -4,6 +4,7 @@
   buildPythonPackage,
   fetchFromGitHub,
   rustPlatform,
+  rustCrates,
 
   # optional-dependencies
   numpy,
@@ -41,13 +42,24 @@ buildPythonPackage (finalAttrs: {
 
   sourceRoot = "${finalAttrs.src.name}/bindings/python";
 
-  cargoDeps = rustPlatform.importCargoLock { lockFile = ./Cargo.lock; };
-
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
+  cargoDeps = rustCrates.mkRegistry {
+    crateDeps = [
+      "criterion@0.6"
+      "hashbrown@0.16:serde"
+      "libc@0.2"
+      "memmap2@0.9"
+      "objc2-metal@0.3:MTLBuffer,MTLDevice,MTLResource"
+      "objc2@0.6"
+      "proptest@1"
+      "pyo3@0.28:abi3,abi3-py310"
+      "serde@1:alloc,derive"
+      "serde_json@1:alloc"
+      "tempfile@3"
+    ];
+  };
 
   nativeBuildInputs = [
+    rustPlatform.cargoRegistryHook
     rustPlatform.cargoSetupHook
     rustPlatform.maturinBuildHook
   ];
