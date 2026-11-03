@@ -1,0 +1,27 @@
+diff --git a/src/libcommon/tpm2-common.c b/src/libcommon/tpm2-common.c
+index fc1b9c3..7d490e0 100644
+--- a/src/libcommon/tpm2-common.c
++++ b/src/libcommon/tpm2-common.c
+@@ -3476,15 +3476,16 @@ static __attribute__((constructor)) void tpm2_init(void)
+ 		TSS_CONTEXT *tssContext;
+ 		TPM_RC rc = tpm2_create(&tssContext, dir);
+ 
+-		if (!rc)
++		if (!rc) {
+ 			rc = tpm2_load_srk(tssContext, &h, NULL, &pub,
+ 					   TPM_RH_NULL, TPM2_LOADABLE);
+-		if (!rc) {
+-			tpm2_FlushContext(tssContext, h);
+-			tpm2_ObjectPublic_GetName(&tpm2_null_name,
+-						  &pub.publicArea);
++			if (!rc) {
++				tpm2_FlushContext(tssContext, h);
++				tpm2_ObjectPublic_GetName(&tpm2_null_name,
++							  &pub.publicArea);
++			}
++			TSS_Delete(tssContext);
+ 		}
+-		TSS_Delete(tssContext);
+ 		rmdir(dir);
+ 	} else {
+ 		char hexname[MAX_HEXNAME];
