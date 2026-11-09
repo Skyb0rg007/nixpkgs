@@ -708,26 +708,37 @@ stdenv.mkDerivation (finalAttrs: {
 
     inherit
       withBootloader
+      withCoredump
       withCryptsetup
       withEfi
       withFido2
+      withHomed
       withHostnamed
       withImportd
       withKmod
       withLocaled
       withLogind
       withMachined
-      withNetworkd
-      withNsresourced
       withMountfsd
+      withNetworkd
       withNspawn
-      withRepart
+      withNsresourced
+      withOomd
+      withPam
       withPortabled
+      withQrencode
+      withRemote
+      withRepart
+      withResolved
       withStorage
       withSysupdate
+      withSysusers
       withTimedated
+      withTimesyncd
       withTpm2Tss
+      withUserDb
       withUtmp
+      withVConsole
       withVmspawn
       util-linux
       kmod
