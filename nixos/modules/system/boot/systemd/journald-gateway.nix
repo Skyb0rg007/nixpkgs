@@ -80,6 +80,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = config.systemd.package.withRemote;
+        message = "services.journald.gateway.enable requires systemd.package to be built with withRemote.";
+      }
+    ];
+
     systemd.additionalUpstreamSystemUnits = [
       "systemd-journal-gatewayd.socket"
       "systemd-journal-gatewayd.service"

@@ -303,6 +303,10 @@ in
 
     assertions = [
       {
+        assertion = config.boot.initrd.systemd.package.withCryptsetup;
+        message = "boot.initrd.luks requires boot.initrd.systemd.package to be built with withCryptsetup.";
+      }
+      {
         assertion =
           any (dev: dev.bypassWorkqueues) (attrValues luks.devices)
           -> versionAtLeast kernelPackages.kernel.version "5.9";

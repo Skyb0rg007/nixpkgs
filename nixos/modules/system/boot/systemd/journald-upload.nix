@@ -99,6 +99,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = config.systemd.package.withRemote;
+        message = "services.journald.upload.enable requires systemd.package to be built with withRemote.";
+      }
+    ];
+
     systemd.additionalUpstreamSystemUnits = [ "systemd-journal-upload.service" ];
 
     systemd.services."systemd-journal-upload" = {

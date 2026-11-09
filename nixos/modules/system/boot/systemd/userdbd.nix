@@ -31,10 +31,16 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    assertions = lib.singleton {
-      assertion = cfg.enableSSHSupport -> config.security.enableWrappers;
-      message = "OpenSSH userdb integration requires security wrappers.";
-    };
+    assertions = [
+      {
+        assertion = config.systemd.package.withUserDb;
+        message = "services.userdbd.enable requires systemd.package to be built with withUserDb.";
+      }
+      {
+        assertion = cfg.enableSSHSupport -> config.security.enableWrappers;
+        message = "OpenSSH userdb integration requires security wrappers.";
+      }
+    ];
 
     warnings = lib.optional (lib.length highSystemUsers > 0 && !cfg.silenceHighSystemUsers) ''
       The following system users have UIDs higher than 1000:

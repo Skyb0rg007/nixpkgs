@@ -97,6 +97,10 @@ in
 
     assertions = [
       {
+        assertion = config.systemd.package.withSysusers;
+        message = "systemd.sysusers.enable requires systemd.package to be built with withSysusers.";
+      }
+      {
         assertion = config.system.activationScripts.users == "";
         message = "system.activationScripts.users has to be empty to use systemd-sysusers";
       }

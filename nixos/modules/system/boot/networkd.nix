@@ -4356,6 +4356,20 @@ in
   };
 
   config = mkMerge [
+    {
+      assertions = [
+        {
+          assertion = config.systemd.network.enable -> config.systemd.package.withNetworkd;
+          message = "systemd.network.enable requires systemd.package to be built with withNetworkd.";
+        }
+        {
+          assertion =
+            config.boot.initrd.enable && config.boot.initrd.systemd.network.enable
+            -> config.boot.initrd.systemd.package.withNetworkd;
+          message = "boot.initrd.systemd.network.enable requires boot.initrd.systemd.package to be built with withNetworkd.";
+        }
+      ];
+    }
     stage2Config
     (mkIf config.boot.initrd.enable {
       boot.initrd = stage1Config;

@@ -18,6 +18,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = config.boot.initrd.systemd.package.withCryptsetup;
+        message = "boot.initrd.systemd.dmVerity.enable requires boot.initrd.systemd.package to be built with withCryptsetup.";
+      }
+    ];
+
     boot.initrd = {
       availableKernelModules = [
         "dm_mod"

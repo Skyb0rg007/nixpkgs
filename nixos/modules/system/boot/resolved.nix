@@ -173,6 +173,10 @@ in
 
       assertions = [
         {
+          assertion = config.systemd.package.withResolved;
+          message = "services.resolved.enable requires systemd.package to be built with withResolved.";
+        }
+        {
           assertion = !config.networking.useHostResolvConf;
           message = "Using host resolv.conf is not supported with systemd-resolved";
         }
@@ -236,6 +240,13 @@ in
     })
 
     (mkIf config.boot.initrd.services.resolved.enable {
+
+      assertions = [
+        {
+          assertion = config.boot.initrd.systemd.package.withResolved;
+          message = "boot.initrd.services.resolved.enable requires boot.initrd.systemd.package to be built with withResolved.";
+        }
+      ];
 
       boot.initrd.systemd = {
         contents = {

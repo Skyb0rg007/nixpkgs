@@ -113,7 +113,13 @@ in
           "ServerKeyFile"
           "ServerCertificateFile"
           "TrustedCertificateFile"
-        ];
+        ]
+      ++ [
+        {
+          assertion = config.systemd.package.withRemote;
+          message = "services.journald.remote.enable requires systemd.package to be built with withRemote.";
+        }
+      ];
 
     systemd.additionalUpstreamSystemUnits = [
       "systemd-journal-remote.service"

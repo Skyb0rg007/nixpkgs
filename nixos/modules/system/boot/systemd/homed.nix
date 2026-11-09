@@ -40,6 +40,10 @@ in
   config = lib.mkIf cfg.enable {
     assertions = [
       {
+        assertion = config.systemd.package.withHomed;
+        message = "services.homed.enable requires systemd.package to be built with withHomed.";
+      }
+      {
         assertion = config.services.nscd.enable;
         message = ''
           systemd-homed requires the use of the systemd nss module.

@@ -141,7 +141,16 @@ in
   };
 
   config = lib.mkIf (cfg.enable || initrdCfg.enable) {
-    assertions = partitionAssertions;
+    assertions = partitionAssertions ++ [
+      {
+        assertion = cfg.enable -> config.systemd.package.withRepart;
+        message = "systemd.repart.enable requires systemd.package to be built with withRepart.";
+      }
+      {
+        assertion = initrdCfg.enable -> config.boot.initrd.systemd.package.withRepart;
+        message = "boot.initrd.systemd.repart.enable requires boot.initrd.systemd.package to be built with withRepart.";
+      }
+    ];
 
     # systemd-repart uses loopback devices for partition creation
     boot.initrd.availableKernelModules = lib.optional initrdCfg.enable "loop";
