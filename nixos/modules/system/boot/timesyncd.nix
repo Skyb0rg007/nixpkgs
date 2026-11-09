@@ -22,8 +22,8 @@ in
 
     services.timesyncd = {
       enable = lib.mkOption {
-        default = !config.boot.isContainer;
-        defaultText = lib.literalExpression "!config.boot.isContainer";
+        default = !config.boot.isContainer && config.systemd.package.withTimesyncd;
+        defaultText = lib.literalExpression "!config.boot.isContainer && config.systemd.package.withTimesyncd";
         type = lib.types.bool;
         description = ''
           Enables the systemd NTP client daemon.
@@ -73,6 +73,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+
+    assertions = [
+      {
+        assertion = config.systemd.package.withTimesyncd;
+        message = "services.timesyncd.enable requires systemd.package to be built with withTimesyncd.";
+      }
+    ];
 
     systemd.additionalUpstreamSystemUnits = [ "systemd-timesyncd.service" ];
 

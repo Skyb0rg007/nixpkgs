@@ -21,7 +21,8 @@ in
 
   options = {
     systemd.coredump.enable = lib.mkOption {
-      default = true;
+      default = config.systemd.package.withCoredump;
+      defaultText = lib.literalExpression "config.systemd.package.withCoredump";
       type = lib.types.bool;
       description = ''
         Whether core dumps should be processed by
@@ -48,6 +49,13 @@ in
   config = lib.mkMerge [
 
     (lib.mkIf cfg.enable {
+      assertions = [
+        {
+          assertion = config.systemd.package.withCoredump;
+          message = "systemd.coredump.enable requires systemd.package to be built with withCoredump.";
+        }
+      ];
+
       systemd.additionalUpstreamSystemUnits = [
         "systemd-coredump.socket"
         "systemd-coredump@.service"

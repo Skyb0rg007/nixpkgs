@@ -50,7 +50,8 @@ in
 
   options.console = {
     enable = lib.mkEnableOption "virtual console" // {
-      default = true;
+      default = config.systemd.package.withVConsole;
+      defaultText = lib.literalExpression "config.systemd.package.withVConsole";
     };
 
     font = lib.mkOption {
@@ -162,6 +163,17 @@ in
     (lib.mkIf cfg.enable (
       lib.mkMerge [
         {
+          assertions = [
+            {
+              assertion = config.systemd.package.withVConsole;
+              message = "console.enable requires systemd.package to be built with withVConsole.";
+            }
+            {
+              assertion = config.boot.initrd.enable -> config.boot.initrd.systemd.package.withVConsole;
+              message = "console.enable requires boot.initrd.systemd.package to be built with withVConsole.";
+            }
+          ];
+
           environment.systemPackages = [ pkgs.kbd ];
 
           # Let systemd-vconsole-setup.service do the work of setting up the

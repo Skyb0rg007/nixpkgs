@@ -20,7 +20,8 @@ in
 
   options.systemd.oomd = {
     enable = lib.mkEnableOption "the `systemd-oomd` OOM killer" // {
-      default = true;
+      default = config.systemd.package.withOomd;
+      defaultText = lib.literalExpression "config.systemd.package.withOomd";
     };
 
     # Fedora enables the first and third option by default. See the 10-oomd-* files here:
@@ -45,6 +46,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = config.systemd.package.withOomd;
+        message = "systemd.oomd.enable requires systemd.package to be built with withOomd.";
+      }
+    ];
+
     systemd.additionalUpstreamSystemUnits = [
       "systemd-oomd.service"
       "systemd-oomd.socket"
