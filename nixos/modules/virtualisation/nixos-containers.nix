@@ -1074,6 +1074,15 @@ in
         };
       in
       {
+        assertions = [
+          {
+            # Containers are started with systemd-nspawn, placed in machine.slice and
+            # managed with machinectl.
+            assertion = config.systemd.package.withNspawn && config.systemd.package.withMachined;
+            message = "boot.enableContainers requires systemd.package to be built with withNspawn and withMachined.";
+          }
+        ];
+
         warnings = (
           optional
             (config.virtualisation.containers.enable && versionOlder config.system.stateVersion "22.05")
