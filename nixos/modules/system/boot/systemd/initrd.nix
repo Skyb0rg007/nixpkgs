@@ -73,7 +73,9 @@ let
     "initrd-switch-root.target"
     "initrd.target"
     "kexec.target"
-    "kmod-static-nodes.service"
+  ]
+  ++ lib.optional cfg.package.withKmod "kmod-static-nodes.service"
+  ++ [
     "local-fs-pre.target"
     "local-fs.target"
     "modprobe@.service"
@@ -105,14 +107,16 @@ let
     "systemd-journald.service"
     "systemd-journald.socket"
     "systemd-kexec.service"
-    "systemd-modules-load.service"
+  ]
+  ++ lib.optional cfg.package.withKmod "systemd-modules-load.service"
+  ++ [
     "systemd-poweroff.service"
     "systemd-reboot.service"
     "systemd-sysctl.service"
     "timers.target"
     "umount.target"
-    "systemd-bsod.service"
   ]
+  ++ lib.optional cfg.package.withQrencode "systemd-bsod.service"
   ++ cfg.additionalUpstreamUnits;
 
   upstreamWants = [
@@ -606,12 +610,16 @@ in
         "${cfg.package}/lib/systemd/systemd-hibernate-resume"
         "${cfg.package}/lib/systemd/systemd-journald"
         "${cfg.package}/lib/systemd/systemd-makefs"
-        "${cfg.package}/lib/systemd/systemd-modules-load"
+      ]
+      ++ lib.optional cfg.package.withKmod "${cfg.package}/lib/systemd/systemd-modules-load"
+      ++ [
         "${cfg.package}/lib/systemd/systemd-remount-fs"
         "${cfg.package}/lib/systemd/systemd-shutdown"
         "${cfg.package}/lib/systemd/systemd-sulogin-shell"
         "${cfg.package}/lib/systemd/systemd-sysctl"
-        "${cfg.package}/lib/systemd/systemd-bsod"
+      ]
+      ++ lib.optional cfg.package.withQrencode "${cfg.package}/lib/systemd/systemd-bsod"
+      ++ [
         "${cfg.package}/lib/systemd/systemd-sysroot-fstab-check"
         "${cfg.package}/lib/systemd/systemd-factory-reset"
         "${cfg.package}/bin/systemd-dissect"

@@ -442,7 +442,7 @@ in
         "modules-load.d/nixos.conf".source = kernelModulesConf;
       };
 
-      systemd.services.systemd-modules-load = {
+      systemd.services.systemd-modules-load = mkIf config.systemd.package.withKmod {
         wantedBy = [ "multi-user.target" ];
         restartTriggers = [ kernelModulesConf ];
         serviceConfig = {

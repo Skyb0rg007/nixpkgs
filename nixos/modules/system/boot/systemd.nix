@@ -80,8 +80,12 @@ let
     "smartcard.target"
 
     # Kernel module loading.
+  ]
+  ++ optionals cfg.package.withKmod [
     "systemd-modules-load.service"
     "kmod-static-nodes.service"
+  ]
+  ++ [
     "modprobe@.service"
 
     # Filesystems.
@@ -626,7 +630,7 @@ in
     system.nssDatabases = {
       hosts = (
         mkMerge [
-          (mkOrder 400 [ "mymachines" ]) # 400 to ensure it comes before resolve (which is 501)
+          (mkIf cfg.package.withMachined (mkOrder 400 [ "mymachines" ])) # 400 to ensure it comes before resolve (which is 501)
           (mkOrder 999 [ "myhostname" ]) # after files (which is 998), but before regular nss modules
         ]
       );
@@ -870,10 +874,12 @@ in
     systemd.services.systemd-pstore.wantedBy = [ "sysinit.target" ]; # see #81138
 
     # NixOS has kernel modules in a different location, so override that here.
-    systemd.services.kmod-static-nodes.unitConfig.ConditionFileNotEmpty = [
-      "" # required to unset the previous value!
-      "/run/booted-system/kernel-modules/lib/modules/%v/modules.devname"
-    ];
+    systemd.services.kmod-static-nodes.unitConfig.ConditionFileNotEmpty =
+      lib.mkIf cfg.package.withKmod
+        [
+          "" # required to unset the previous value!
+          "/run/booted-system/kernel-modules/lib/modules/%v/modules.devname"
+        ];
 
     # Don't bother with certain units in containers.
     systemd.services.systemd-remount-fs.unitConfig.ConditionVirtualization = "!container";

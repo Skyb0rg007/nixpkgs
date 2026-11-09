@@ -98,16 +98,25 @@ in
         warnings = lib.concatMap (v: v.warnings) (lib.attrValues cfg);
       }
       (lib.mkIf (enabledInstances != { }) {
+        assertions = [
+          {
+            assertion = config.systemd.package.withNspawn;
+            message = "systemd.nspawn requires systemd.package to be built with withNspawn.";
+          }
+        ];
+
         environment.etc = lib.mapAttrs' (name: value: {
           name = "systemd/nspawn/${name}.nspawn";
           value.text = utils.systemdUtils.lib.settingsToSections value.settings;
         }) enabledInstances;
       })
-      {
+      (lib.mkIf config.systemd.package.withMachined {
         systemd.targets.multi-user.wants = [ "machines.target" ];
+      })
+      (lib.mkIf config.systemd.package.withNspawn {
         systemd.services."systemd-nspawn@".environment = {
           SYSTEMD_NSPAWN_UNIFIED_HIERARCHY = lib.mkDefault "1";
         };
-      }
+      })
     ];
 }
