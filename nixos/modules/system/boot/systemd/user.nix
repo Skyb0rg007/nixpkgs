@@ -44,8 +44,8 @@ let
     "systemd-journalctl@.service"
     "systemd-journalctl.socket"
     "timers.target"
-    "xdg-desktop-autostart.target"
   ]
+  ++ lib.optional systemd.withXdgAutostart "xdg-desktop-autostart.target"
   ++ lib.optionals systemd.withImportd [
     "dbus-org.freedesktop.import1.service"
     "systemd-importd.service"

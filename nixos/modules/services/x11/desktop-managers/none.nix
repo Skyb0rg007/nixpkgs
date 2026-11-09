@@ -39,6 +39,13 @@ in
       ];
     }
     (mkIf runXdgAutostart {
+      assertions = [
+        {
+          assertion = config.systemd.package.withXdgAutostart;
+          message = "services.xserver.desktopManager.runXdgAutostartIfNone requires systemd.package to be built with withXdgAutostart.";
+        }
+      ];
+
       systemd.user.targets.xdg-autostart-if-no-desktop-manager = {
         description = "Run XDG autostart files";
         # From `plasma-workspace`, `share/systemd/user/plasma-workspace@.target`.

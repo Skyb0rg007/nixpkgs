@@ -101,7 +101,6 @@ let
     "systemd-fsck@.service"
     "systemd-loop@.service"
     "systemd-halt.service"
-    "systemd-hibernate-resume.service"
     "systemd-journald-audit.socket"
     "systemd-journald-dev-log.socket"
     "systemd-journald.service"
@@ -116,6 +115,7 @@ let
     "timers.target"
     "umount.target"
   ]
+  ++ lib.optional cfg.package.withHibernate "systemd-hibernate-resume.service"
   ++ lib.optional cfg.package.withQrencode "systemd-bsod.service"
   ++ cfg.additionalUpstreamUnits;
 
@@ -514,6 +514,10 @@ in
   config = mkIf config.boot.initrd.enable {
     assertions = [
       {
+        assertion = config.boot.resumeDevice != "" -> cfg.package.withHibernate;
+        message = "boot.resumeDevice requires boot.initrd.systemd.package to be built with withHibernate.";
+      }
+      {
         assertion =
           cfg.root == "fstab" -> any (fs: fs.mountPoint == "/") (builtins.attrValues config.fileSystems);
         message = "The ‘fileSystems’ option does not specify your root file system.";
@@ -607,7 +611,6 @@ in
         # systemd tooling
         "${cfg.package}/lib/systemd/systemd-executor"
         "${cfg.package}/lib/systemd/systemd-fsck"
-        "${cfg.package}/lib/systemd/systemd-hibernate-resume"
         "${cfg.package}/lib/systemd/systemd-journald"
         "${cfg.package}/lib/systemd/systemd-makefs"
       ]
@@ -628,7 +631,6 @@ in
         "${cfg.package}/lib/systemd/system-generators/systemd-debug-generator"
         "${cfg.package}/lib/systemd/system-generators/systemd-fstab-generator"
         "${cfg.package}/lib/systemd/system-generators/systemd-gpt-auto-generator"
-        "${cfg.package}/lib/systemd/system-generators/systemd-hibernate-resume-generator"
         "${cfg.package}/lib/systemd/system-generators/systemd-run-generator"
         "${cfg.package}/lib/systemd/system-generators/systemd-factory-reset-generator"
 
@@ -641,6 +643,10 @@ in
         "${config.system.nixos-init.package}/bin/resolve-in-root"
         # Find the etc paths
         "${config.system.nixos-init.package}/bin/find-etc"
+      ]
+      ++ lib.optionals cfg.package.withHibernate [
+        "${cfg.package}/lib/systemd/systemd-hibernate-resume"
+        "${cfg.package}/lib/systemd/system-generators/systemd-hibernate-resume-generator"
       ]
       ++ lib.optionals config.system.nixos-init.enable [
         "${config.system.nixos-init.package}/bin/initrd-init"

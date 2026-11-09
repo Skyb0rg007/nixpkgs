@@ -95,7 +95,6 @@ let
     "systemd-growfs-root.service"
     "systemd-loop@.service"
     "systemd-remount-fs.service"
-    "systemd-pstore.service"
     "local-fs.target"
     "local-fs-pre.target"
     "remote-fs.target"
@@ -105,38 +104,44 @@ let
     "dev-mqueue.mount"
     "sys-fs-fuse-connections.mount"
   ]
+  ++ optional cfg.package.withPstore "systemd-pstore.service"
   ++ (optional (!config.boot.isContainer) "sys-kernel-config.mount")
   ++ [
     "sys-kernel-debug.mount"
     "sys-kernel-tracing.mount"
-
-    # Maintaining state across reboots.
-    "systemd-random-seed.service"
   ]
+  # Maintaining state across reboots.
+  ++ optional cfg.package.withRandomSeed "systemd-random-seed.service"
   ++ optionals cfg.package.withBootloader [
     "systemd-boot-random-seed.service"
     "systemd-bless-boot.service"
   ]
-  ++ [
-    "systemd-backlight@.service"
+  ++ optional cfg.package.withBacklight "systemd-backlight@.service"
+  ++ optionals cfg.package.withRfkill [
     "systemd-rfkill.service"
     "systemd-rfkill.socket"
-
+  ]
+  ++ [
     "boot-complete.target"
 
-    # Hibernate / suspend.
-    "hibernate.target"
+    # Suspend.
     "suspend.target"
-    "suspend-then-hibernate.target"
     "sleep.target"
-    "hybrid-sleep.target"
-    "systemd-hibernate.service"
-  ]
-  ++ (lib.optional cfg.package.withEfi "systemd-hibernate-clear.service")
-  ++ [
-    "systemd-hybrid-sleep.service"
     "systemd-suspend.service"
-    "systemd-suspend-then-hibernate.service"
+  ]
+  # Hibernate.
+  ++ optionals cfg.package.withHibernate (
+    [
+      "hibernate.target"
+      "suspend-then-hibernate.target"
+      "hybrid-sleep.target"
+      "systemd-hibernate.service"
+      "systemd-hybrid-sleep.service"
+      "systemd-suspend-then-hibernate.service"
+    ]
+    ++ optional cfg.package.withEfi "systemd-hibernate-clear.service"
+  )
+  ++ [
 
     # Reboot stuff.
     "reboot.target"
@@ -837,7 +842,7 @@ in
     }) (filterAttrs (name: service: service.enable && service.startAt != [ ]) cfg.services);
 
     # Some overrides to upstream units.
-    systemd.services."systemd-backlight@".restartIfChanged = false;
+    systemd.services."systemd-backlight@".restartIfChanged = mkIf cfg.package.withBacklight false;
     systemd.services."systemd-fsck@".restartIfChanged = false;
     systemd.services."systemd-fsck@".path = [ pkgs.util-linux ] ++ config.system.fsPackages;
     systemd.services."systemd-makefs@" = {
@@ -858,7 +863,7 @@ in
       restartIfChanged = false;
       serviceConfig.ExecSearchPath = lib.makeBinPath [ pkgs.kmod ];
     };
-    systemd.services.systemd-random-seed.restartIfChanged = false;
+    systemd.services.systemd-random-seed.restartIfChanged = mkIf cfg.package.withRandomSeed false;
     systemd.services.systemd-remount-fs.restartIfChanged = false;
     systemd.services.systemd-update-utmp.restartIfChanged = false;
     # `systemd-bless-boot good` fails once the current boot has been blessed.
@@ -871,7 +876,7 @@ in
       environment = proxy_env;
       path = [ pkgs.gnupgMinimal ];
     };
-    systemd.services.systemd-pstore.wantedBy = [ "sysinit.target" ]; # see #81138
+    systemd.services.systemd-pstore.wantedBy = mkIf cfg.package.withPstore [ "sysinit.target" ]; # see #81138
 
     # NixOS has kernel modules in a different location, so override that here.
     systemd.services.kmod-static-nodes.unitConfig.ConditionFileNotEmpty =

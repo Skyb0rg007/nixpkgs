@@ -227,7 +227,13 @@ in
   };
 
   config = {
-    assertions = lib.mapAttrsToList (name: reg: {
+    assertions = [
+      {
+        assertion = cfg.registrations != { } -> config.systemd.package.withBinfmt;
+        message = "boot.binfmt.registrations requires systemd.package to be built with withBinfmt.";
+      }
+    ]
+    ++ lib.mapAttrsToList (name: reg: {
       assertion = reg.fixBinary -> !reg.wrapInterpreterInShell;
       message = "boot.binfmt.registrations.\"${name}\" cannot have fixBinary when the interpreter is invoked through a shell.";
     }) cfg.registrations;
