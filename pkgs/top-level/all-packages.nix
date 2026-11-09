@@ -7478,6 +7478,16 @@ with pkgs;
     withQrencode = false;
     withLibarchive = false;
     withVConsole = false;
+    withBacklight = false;
+    withBinfmt = false;
+    withEnvironmentD = false;
+    withHibernate = false;
+    withPstore = false;
+    withRandomSeed = false;
+    withRfkill = false;
+    withStoragetm = false;
+    withSysext = false;
+    withXdgAutostart = false;
     # withKmod = false; # breaks udevCheckHook of bcache-tools
     withFirstboot = false;
     withKexectools = false;

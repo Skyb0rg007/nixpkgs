@@ -171,6 +171,16 @@
   withKernelInstall ? false,
   withLibarchive ? true,
   withVConsole ? true,
+  withBacklight ? true,
+  withBinfmt ? true,
+  withEnvironmentD ? true,
+  withHibernate ? true,
+  withPstore ? true,
+  withRandomSeed ? true,
+  withRfkill ? true,
+  withStoragetm ? true,
+  withSysext ? true,
+  withXdgAutostart ? true,
   # tests assume too much system access for them to be feasible for us right now
   withTests ? false,
   # build only libudev and libsystemd
@@ -533,6 +543,16 @@ stdenv.mkDerivation (finalAttrs: {
     (lib.mesonEnable "nspawn" withNspawn)
 
     (lib.mesonBool "vconsole" withVConsole)
+    (lib.mesonBool "backlight" withBacklight)
+    (lib.mesonBool "binfmt" withBinfmt)
+    (lib.mesonBool "environment-d" withEnvironmentD)
+    (lib.mesonBool "hibernate" withHibernate)
+    (lib.mesonBool "pstore" withPstore)
+    (lib.mesonBool "randomseed" withRandomSeed)
+    (lib.mesonBool "rfkill" withRfkill)
+    (lib.mesonBool "storagetm" withStoragetm)
+    (lib.mesonBool "sysext" withSysext)
+    (lib.mesonBool "xdg-autostart" withXdgAutostart)
     (lib.mesonBool "analyze" withAnalyze)
     (lib.mesonBool "logind" withLogind)
     (lib.mesonBool "localed" withLocaled)
@@ -629,7 +649,12 @@ stdenv.mkDerivation (finalAttrs: {
   postInstall =
     lib.optionalString (!buildLibsOnly) ''
       mkdir -p $out/example/systemd
-      mv $out/lib/{binfmt.d,sysctl.d,tmpfiles.d} $out/example
+      mv $out/lib/{sysctl.d,tmpfiles.d} $out/example
+    ''
+    + lib.optionalString (withBinfmt && !buildLibsOnly) ''
+      mv $out/lib/binfmt.d $out/example
+    ''
+    + lib.optionalString (!buildLibsOnly) ''
       mv $out/lib/systemd/{system,user} $out/example/systemd
 
       rm -rf $out/etc/systemd/system
@@ -707,11 +732,15 @@ stdenv.mkDerivation (finalAttrs: {
     interfaceVersion = 2;
 
     inherit
+      withBacklight
+      withBinfmt
       withBootloader
       withCoredump
       withCryptsetup
       withEfi
+      withEnvironmentD
       withFido2
+      withHibernate
       withHomed
       withHostnamed
       withImportd
@@ -726,11 +755,16 @@ stdenv.mkDerivation (finalAttrs: {
       withOomd
       withPam
       withPortabled
+      withPstore
       withQrencode
+      withRandomSeed
       withRemote
       withRepart
       withResolved
+      withRfkill
       withStorage
+      withStoragetm
+      withSysext
       withSysupdate
       withSysusers
       withTimedated
@@ -740,6 +774,7 @@ stdenv.mkDerivation (finalAttrs: {
       withUtmp
       withVConsole
       withVmspawn
+      withXdgAutostart
       util-linux
       kmod
       kbd
