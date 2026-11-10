@@ -64,6 +64,9 @@
   qrencode,
   libarchive,
   llvmPackages,
+  openssh,
+  rustc,
+  rust-bindgen,
 
   # the (optional) BPF feature requires bpftool, libbpf, clang and llvm-strip to
   # be available during build time.
@@ -90,11 +93,13 @@
   withAnalyze ? true,
   withApparmor ? true,
   withAudit ? true,
+  withBatteryCheck ? true,
   # compiles systemd-boot, assumes EFI is available.
   withBootloader ?
     withEfi
     # "Unknown 64-bit data model"
     && !stdenv.hostPlatform.isRiscV32,
+  withClonesetup ? true,
   # adds bzip2, lz4, xz and zstd
   withCompression ? true,
   withCoredump ? true,
@@ -104,11 +109,13 @@
   withEfi ? stdenv.hostPlatform.isEfi,
   withFido2 ? true,
   withFirstboot ? true,
+  withGrowfs ? true,
   withHomed ? true,
   withHostnamed ? true,
   withHwdb ? true,
   withImportd ? true,
   withImds ? true,
+  withIntegritysetup ? withCryptsetup,
   withKmod ? true,
   withLibBPF ?
     lib.versionAtLeast buildPackages.llvmPackages.clang.version "10.0"
@@ -131,6 +138,8 @@
   withLocaled ? true,
   withLogind ? true,
   withMachined ? true,
+  withMeasure ? withOpenSSL && withTpm2Tss,
+  withMime ? true,
   withNetworkd ? true,
   withNspawn ? !buildLibsOnly,
   withNss ? !stdenv.hostPlatform.isMusl,
@@ -143,8 +152,14 @@
   withPortabled ? true,
   withQrencode ? true,
   withRemote ? true,
+  withReport ? true,
   withResolved ? true,
+  # Rust components (currently systemd-keyring-setup). Upstream does not
+  # support Rust when cross-compiling yet.
+  withRust ? lib.systems.equals stdenv.buildPlatform stdenv.hostPlatform,
   withShellCompletions ? true,
+  withSleep ? true,
+  withStorage ? true,
   withSysinstall ? true,
   withSysusers ? true,
   withSysupdate ? true,
@@ -159,11 +174,17 @@
   # otherwise the condition for systemd-update-utmp.service will
   # attempt to load a service which does not exist, resulting in errors.
   withUtmp ? !stdenv.hostPlatform.isMusl,
+  withValidatefs ? true,
+  withVeritysetup ? withCryptsetup,
   withVmspawn ? true,
+  # Exposes the root file system over SFTP via varlink; the units are disabled
+  # by default and need polkit authorization.
+  withVarlinkSftp ? true,
   # The BPF programs backing nsresourced/mountfsd need a vmlinux.h, which is
   # only available when a kernel BTF is provided (see vmlinux-btf above).
   withNsresourced ? withLibBPF && vmlinux-btf != null,
   withMountfsd ? withLibBPF && vmlinux-btf != null,
+  withVarlinkMonitord ? withLibBPF && vmlinux-btf != null,
   # kernel-install shouldn't usually be used on NixOS, but can be useful, e.g. for
   # building disk images for non-NixOS systems. To save users from trying to use it
   # on their live NixOS system, we disable it by default.
@@ -194,6 +215,10 @@ assert withFido2 -> withOpenSSL;
 assert withSysupdate -> withOpenSSL;
 assert withNsresourced -> withLibBPF;
 assert withMountfsd -> withLibBPF;
+assert withVarlinkMonitord -> withLibBPF;
+assert withIntegritysetup -> withCryptsetup;
+assert withVeritysetup -> withCryptsetup;
+assert withMeasure -> (withOpenSSL && withTpm2Tss);
 assert withImportd -> withOpenSSL;
 assert withUkify -> (withEfi && withBootloader);
 assert withRepart -> withCryptsetup;
@@ -211,13 +236,13 @@ let
 in
 stdenv.mkDerivation (finalAttrs: {
   inherit pname;
-  version = "262.2";
+  version = "262-unstable-2026-11-10";
 
   src = fetchFromGitHub {
     owner = "systemd";
     repo = "systemd";
-    tag = "v${finalAttrs.version}";
-    hash = "sha256-BNL7ah1mtw4G94Sbuj9RL7/XDliI3lZFi0XBeQcMtqg=";
+    rev = "76e9aee9e5296f65387ffe8f16b319354f236fd5";
+    hash = "sha256-YUi9cuW5PBW6nSKPAFZyssGYjMKMoam7+HqGgL/HEdE=";
   };
 
   # PATCH POLICY
@@ -322,6 +347,10 @@ stdenv.mkDerivation (finalAttrs: {
     bpftools
     buildPackages.llvmPackages.clang
     buildPackages.llvmPackages.libllvm
+  ]
+  ++ lib.optionals withRust [
+    rustc
+    rust-bindgen
   ];
 
   autoPatchelfFlags = [
@@ -412,6 +441,11 @@ stdenv.mkDerivation (finalAttrs: {
     # /bin/sh is also the upstream default. Explicitly set this so that we're
     # independent of upstream changes to the default.
     (lib.mesonOption "debug-shell" "/bin/sh")
+
+    # Experimental features require opt-in via $SYSTEMD_EXPERIMENTAL=1. This is
+    # what "auto" resolves to in release mode; set explicitly to stay
+    # independent of upstream changes to the default.
+    (lib.mesonOption "experimental" "envvar")
 
     # Use the correct path for Bash for user shells (e.g. used in nspawn and
     # homed), which otherwise defaults to /bin/bash.
@@ -528,8 +562,20 @@ stdenv.mkDerivation (finalAttrs: {
     (lib.mesonEnable "xenctrl" false)
     (lib.mesonEnable "gnutls" false)
     (lib.mesonEnable "xkbcommon" false)
+    (lib.mesonEnable "rust" withRust)
     (lib.mesonEnable "man" true)
     (lib.mesonEnable "nspawn" withNspawn)
+    (lib.mesonEnable "battery-check" withBatteryCheck)
+    (lib.mesonEnable "clonesetup" withClonesetup)
+    (lib.mesonEnable "growfs" withGrowfs)
+    (lib.mesonEnable "integritysetup" withIntegritysetup)
+    (lib.mesonEnable "measure" withMeasure)
+    (lib.mesonEnable "mime" withMime)
+    (lib.mesonEnable "report" withReport)
+    (lib.mesonEnable "sleep" withSleep)
+    (lib.mesonEnable "storage" withStorage)
+    (lib.mesonEnable "validatefs" withValidatefs)
+    (lib.mesonEnable "veritysetup" withVeritysetup)
 
     (lib.mesonBool "vconsole" withVConsole)
     (lib.mesonBool "analyze" withAnalyze)
@@ -545,6 +591,8 @@ stdenv.mkDerivation (finalAttrs: {
     (lib.mesonBool "timesyncd" withTimesyncd)
     (lib.mesonBool "nsresourced" withNsresourced)
     (lib.mesonBool "mountfsd" withMountfsd)
+    (lib.mesonBool "varlink-monitord" withVarlinkMonitord)
+    (lib.mesonBool "varlink-sftp" withVarlinkSftp)
     (lib.mesonBool "userdb" withUserDb)
     (lib.mesonBool "coredump" withCoredump)
     (lib.mesonBool "firstboot" withFirstboot)
@@ -572,6 +620,9 @@ stdenv.mkDerivation (finalAttrs: {
   ]
   ++ lib.optionals withKexectools [
     (lib.mesonOption "kexec-path" "${kexec-tools}/bin/kexec")
+  ]
+  ++ lib.optionals withVarlinkSftp [
+    (lib.mesonOption "sftp-server-path" "${openssh}/libexec/sftp-server")
   ]
   ++ lib.optionals withKmod [
     (lib.mesonOption "kmod-path" "${kmod}/bin/kmod")
@@ -712,20 +763,30 @@ stdenv.mkDerivation (finalAttrs: {
       withFido2
       withHostnamed
       withImportd
+      withIntegritysetup
       withKmod
       withLocaled
       withLogind
       withMachined
+      withMeasure
       withNetworkd
       withNsresourced
       withMountfsd
       withNspawn
       withRepart
+      withReport
       withPortabled
+      withRust
+      withSleep
+      withStorage
       withSysupdate
       withTimedated
       withTpm2Tss
       withUtmp
+      withValidatefs
+      withVarlinkMonitord
+      withVarlinkSftp
+      withVeritysetup
       util-linux
       kmod
       kbd
