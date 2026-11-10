@@ -7417,6 +7417,8 @@ with pkgs;
     withKexectools = false;
     withLibseccomp = false;
     withNspawn = false;
+    withRust = false;
+    withVarlinkSftp = false;
   };
   systemdLibs = systemdMinimal.override {
     pname = "systemd-minimal-libs";
