@@ -270,33 +270,30 @@ stdenv.mkDerivation (finalAttrs: {
   patches = [
     ./0001-Don-t-try-to-unmount-nix-or-nix-store.patch
     ./0002-Change-usr-share-zoneinfo-to-etc-zoneinfo.patch
-    ./0003-path-util.h-add-placeholder-for-DEFAULT_PATH_NORMAL.patch
-    ./0004-core-don-t-taint-on-unmerged-usr.patch
+    ./0003-core-don-t-taint-on-unmerged-usr.patch
   ];
 
-  postPatch = ''
-    substituteInPlace src/basic/path-util.h --replace-fail "@defaultPathNormal@" "${placeholder "out"}/bin/"
-  ''
-  + lib.optionalString withLibBPF ''
-    substituteInPlace src/bpf/meson.build \
-      --replace-fail "find_program('clang'" "find_program('${stdenv.cc.targetPrefix}clang'"
-  ''
-  + lib.optionalString withUkify ''
-    substituteInPlace src/ukify/ukify.py \
-      --replace-fail \
-      "'readelf'" \
-      "'${targetPackages.stdenv.cc.bintools.targetPrefix}readelf'" \
-      --replace-fail \
-      "/usr/lib/systemd/boot/efi" \
-      "$out/lib/systemd/boot/efi"
-  ''
-  # Finally, patch shebangs in scripts used at build time. This must not patch
-  # scripts that will end up in the output, to avoid build platform references
-  # when cross-compiling.
-  + ''
-    shopt -s extglob
-    patchShebangs tools test src/!(rpm|kernel-install|ukify) src/kernel-install/test-kernel-install.sh
-  '';
+  postPatch =
+    lib.optionalString withLibBPF ''
+      substituteInPlace src/bpf/meson.build \
+        --replace-fail "find_program('clang'" "find_program('${stdenv.cc.targetPrefix}clang'"
+    ''
+    + lib.optionalString withUkify ''
+      substituteInPlace src/ukify/ukify.py \
+        --replace-fail \
+        "'readelf'" \
+        "'${targetPackages.stdenv.cc.bintools.targetPrefix}readelf'" \
+        --replace-fail \
+        "/usr/lib/systemd/boot/efi" \
+        "$out/lib/systemd/boot/efi"
+    ''
+    # Finally, patch shebangs in scripts used at build time. This must not patch
+    # scripts that will end up in the output, to avoid build platform references
+    # when cross-compiling.
+    + ''
+      shopt -s extglob
+      patchShebangs tools test src/!(rpm|kernel-install|ukify) src/kernel-install/test-kernel-install.sh
+    '';
 
   outputs = [
     "out"
@@ -456,6 +453,10 @@ stdenv.mkDerivation (finalAttrs: {
     # We set it to false since stdenv moves sbin/* to bin and creates a symlink,
     # that is, we do not have split bin.
     (lib.mesonOption "split-bin" "false")
+
+    # Append our own bin directory to the built-in executable search path,
+    # used e.g. for resolving ExecStart= and as the manager's default $PATH.
+    (lib.mesonOption "extra-exec-search-path" "${placeholder "out"}/bin")
 
     # D-Bus
     (lib.mesonOption "dbuspolicydir" "${placeholder "out"}/share/dbus-1/system.d")
